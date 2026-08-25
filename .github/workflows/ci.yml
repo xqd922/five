@@ -1,0 +1,47 @@
+# 持续集成：每次推送 / PR 自动执行
+#
+# 两个任务并行：
+# 1. test   —— Linux 上跑静态分析与单元测试（快、省资源）
+# 2. build  —— Windows 上跑完整桌面构建，验证「拉下来就能编译」
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Analyze & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+      - run: flutter gen-l10n
+      - run: flutter analyze
+      - run: flutter test
+
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter build windows --release
+
+      # 把构建产物作为 artifact 存档，可在 Actions 页面下载试玩。
+      - uses: actions/upload-artifact@v4
+        with:
+          name: five-windows-x64
+          path: build/windows/x64/runner/Release/

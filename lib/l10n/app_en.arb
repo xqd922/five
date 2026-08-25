@@ -1,0 +1,48 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Five",
+  "@appTitle": { "description": "App name shown on the home screen and window title" },
+
+  "homeSubtitle": "Gomoku · Five in a Row",
+  "@homeSubtitle": { "description": "Tagline under the app title on the home screen" },
+
+  "localTwoPlayer": "Two Player",
+  "@localTwoPlayer": { "description": "Local two-player (hot-seat) mode entry" },
+  "localTwoPlayerDesc": "Take turns on one device",
+  "@localTwoPlayerDesc": {},
+
+  "vsAi": "Play vs AI",
+  "@vsAi": { "description": "AI opponent mode entry (coming in M2)" },
+  "vsAiComingSoon": "Coming soon",
+  "@vsAiComingSoon": {},
+
+  "settingsTitle": "Settings",
+  "@settingsTitle": {},
+
+  "themeModeTitle": "Theme",
+  "@themeModeTitle": { "description": "Section label for light/dark theme selection" },
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+
+  "blackToMove": "Black to move",
+  "whiteToMove": "White to move",
+  "@blackToMove": { "description": "Status line during a game" },
+
+  "moveCount": "{count} moves",
+  "@moveCount": { "placeholders": { "count": { "type": "int" } } },
+
+  "blackWins": "Black wins!",
+  "whiteWins": "White wins!",
+  "drawGame": "Draw — board is full",
+
+  "undo": "Undo",
+  "restart": "Restart",
+  "backHome": "Home",
+
+  "restartConfirmTitle": "Restart game?",
+  "restartConfirmBody": "The current game will be discarded.",
+  "confirm": "Confirm",
+  "cancel": "Cancel"
+}

@@ -1,0 +1,10 @@
+# Flutter 声明式国际化配置（配合 pubspec.yaml 的 generate: true）
+# 构建时执行 `flutter gen-l10n`（flutter run/build 会自动触发），
+# 从 arb-dir 里的翻译文件生成 AppLocalizations 强类型类。
+arb-dir: lib/l10n
+# 模板语言：所有 key 以此文件为准，其他语言缺少的 key 会回退到它。
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart
+# 生成到项目源码树内（而非隐藏缓存目录），
+# 导入路径固定为 package:five/l10n/generated/...，任何工具链版本都稳定。
+output-dir: lib/l10n/generated

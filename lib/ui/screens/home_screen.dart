@@ -1,0 +1,180 @@
+/// 首页：模式入口 + 主题设置。
+library;
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:five/l10n/generated/app_localizations.dart';
+import 'package:five/state/theme_provider.dart';
+import 'package:five/ui/screens/game_screen.dart';
+
+class HomeScreen extends ConsumerWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final themeMode = ref.watch(themeModeProvider);
+
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          // 内容限宽居中：手机上自然占满，桌面上不会拉成一条横幅。
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              children: [
+                // —— 品牌区 ——
+                Text(
+                  l10n.appTitle,
+                  style: theme.textTheme.displayLarge
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.homeSubtitle,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 28),
+
+                // —— 模式入口 ——
+                _ModeCard(
+                  icon: Icons.people_alt_rounded,
+                  title: l10n.localTwoPlayer,
+                  subtitle: l10n.localTwoPlayerDesc,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                        builder: (_) => const GameScreen()),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _ModeCard(
+                  icon: Icons.psychology_rounded,
+                  title: l10n.vsAi,
+                  subtitle: null, // 占位卡片不显示描述
+                  enabled: false, // M2 接入 AI 后启用
+                  trailingChip: l10n.vsAiComingSoon,
+                ),
+                const SizedBox(height: 32),
+
+                // —— 设置区 ——
+                Card(
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.palette_outlined,
+                                size: 20,
+                                color: theme.colorScheme.onSurfaceVariant),
+                            const SizedBox(width: 8),
+                            Text(l10n.themeModeTitle,
+                                style: theme.textTheme.titleMedium),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        // Material 3 分段按钮：三个互斥选项一目了然。
+                        SegmentedButton<ThemeMode>(
+                          segments: [
+                            ButtonSegment(
+                                value: ThemeMode.system,
+                                label: Text(l10n.themeSystem)),
+                            ButtonSegment(
+                                value: ThemeMode.light,
+                                label: Text(l10n.themeLight)),
+                            ButtonSegment(
+                                value: ThemeMode.dark,
+                                label: Text(l10n.themeDark)),
+                          ],
+                          selected: {themeMode},
+                          onSelectionChanged: (selection) => ref
+                              .read(themeModeProvider.notifier)
+                              .set(selection.first),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 首页模式入口卡片。
+///
+/// [enabled] 为 false 时整卡降透明度并忽略点击——
+/// 用于展示「人机对战」这类尚未开放的模块。
+class _ModeCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final bool enabled;
+  final String? trailingChip;
+  final VoidCallback? onTap;
+
+  const _ModeCard({
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    this.enabled = true,
+    this.trailingChip,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Card.filled(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias, // 让水波纹不溢出圆角
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        child: Opacity(
+          opacity: enabled ? 1 : .55,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Icon(icon, size: 28, color: theme.colorScheme.primary),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: theme.textTheme.titleLarge),
+                      if (subtitle != null)
+                        Text(subtitle!,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            )),
+                    ],
+                  ),
+                ),
+                if (trailingChip != null)
+                  Chip(
+                    label: Text(trailingChip!),
+                    visualDensity: VisualDensity.compact,
+                  )
+                else
+                  Icon(Icons.chevron_right_rounded,
+                      color: theme.colorScheme.onSurfaceVariant),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

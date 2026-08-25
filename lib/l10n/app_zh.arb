@@ -1,0 +1,38 @@
+{
+  "@@locale": "zh",
+
+  "appTitle": "Five",
+
+  "homeSubtitle": "五子棋 · 无禁手",
+
+  "localTwoPlayer": "双人对战",
+  "localTwoPlayerDesc": "同一台设备轮流执子",
+
+  "vsAi": "人机对战",
+  "vsAiComingSoon": "敬请期待",
+
+  "settingsTitle": "设置",
+
+  "themeModeTitle": "主题",
+  "themeSystem": "跟随系统",
+  "themeLight": "浅色",
+  "themeDark": "深色",
+
+  "blackToMove": "黑方行棋",
+  "whiteToMove": "白方行棋",
+
+  "moveCount": "第 {count} 手",
+
+  "blackWins": "黑方获胜！",
+  "whiteWins": "白方获胜！",
+  "drawGame": "平局 — 棋盘已满",
+
+  "undo": "悔棋",
+  "restart": "重新开始",
+  "backHome": "主页",
+
+  "restartConfirmTitle": "重新开始？",
+  "restartConfirmBody": "当前对局将被丢弃。",
+  "confirm": "确定",
+  "cancel": "取消"
+}
