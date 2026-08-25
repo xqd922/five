@@ -1,0 +1,70 @@
+# 自动发版流水线：推送 v* 标签即触发
+#
+# 双平台并行构建 → 产物自动挂到对应 tag 的 GitHub Release。
+# 以后发版流程 = 本地只做两件事：
+#   git tag v1.x.y && git push origin v1.x.y
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write # 创建 Release 与上传附件需要写权限
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: android
+            os: ubuntu-latest
+          - target: windows
+            os: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK 17 (Android)
+        if: matrix.target == 'android'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+      - run: dart pub get
+        working-directory: server
+
+      # —— Android：APK 重命名带上版本号 ——
+      - name: Build Android APK
+        if: matrix.target == 'android'
+        run: |
+          flutter build apk --release
+          mv build/app/outputs/flutter-apk/app-release.apk \
+             five-${GITHUB_REF_NAME}-android.apk
+
+      # —— Windows：整目录压成 zip ——
+      - name: Build Windows exe
+        if: matrix.target == 'windows'
+        shell: pwsh
+        run: |
+          flutter build windows --release
+          Compress-Archive `
+            -Path build/windows/x64/runner/Release/* `
+            -DestinationPath five-${env:GITHUB_REF_NAME}-windows-x64.zip
+
+      # 产物挂到 tag 对应的 Release（不存在则自动创建）。
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            five-*android.apk
+            five-*windows-x64.zip
+          generate_release_notes: true
