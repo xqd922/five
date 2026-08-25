@@ -1,0 +1,17 @@
+name: five_server
+description: Five 五子棋在线对战服务端——WebSocket 房间制对弈，权威胜负判定。
+publish_to: 'none'
+version: 0.2.0
+
+environment:
+  sdk: ^3.13.1
+
+dependencies:
+  # 与客户端共享的核心库：棋盘 / 规则 / 协议。
+  # 服务端的胜负判定与客户端渲染用的是同一份代码。
+  five_core:
+    path: ../packages/five_core
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.0

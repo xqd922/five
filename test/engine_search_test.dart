@@ -6,8 +6,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:five/core/board.dart';
-import 'package:five/core/rules.dart';
+import 'package:five_core/five_core.dart';
 
 import 'package:five/engine/search.dart';
 

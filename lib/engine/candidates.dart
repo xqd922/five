@@ -6,8 +6,7 @@
 /// 实测中盘阶段这一刀能把候选从 ~180 个压到 ~30 个。
 library;
 
-import 'package:five/core/board.dart';
-import 'package:five/core/rules.dart';
+import 'package:five_core/five_core.dart';
 
 class CandidateGenerator {
   /// 与最近棋子的最大切比雪夫距离（棋盘格数）。

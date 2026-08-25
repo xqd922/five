@@ -11,8 +11,7 @@
 /// 【尚未包含、留给调参阶段】Zobrist 置换表、必胜/必杀快速通道。
 library;
 
-import 'package:five/core/board.dart';
-import 'package:five/core/rules.dart';
+import 'package:five_core/five_core.dart';
 
 import 'package:five/engine/candidates.dart';
 import 'package:five/engine/evaluator.dart';

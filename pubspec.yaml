@@ -43,6 +43,9 @@ dependencies:
   shared_preferences: ^2.5.5
   intl: ^0.20.3
   file_selector: ^1.1.0
+  # 共享核心库：棋盘/规则/SGF 与服务端保持同一份实现（monorepo path 依赖）。
+  five_core:
+    path: packages/five_core
   window_manager: ^0.5.2
 
 dev_dependencies:

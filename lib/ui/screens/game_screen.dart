@@ -13,8 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:five/core/board.dart';
-import 'package:five/core/sgf.dart';
+import 'package:five_core/five_core.dart';
 import 'package:five/engine/ai_service.dart';
 import 'package:five/l10n/generated/app_localizations.dart';
 import 'package:five/state/game_controller.dart';

@@ -12,7 +12,7 @@
 /// 否则 AI 会做出"贪十个小便宜而漏掉致命杀招"的蠢事。
 library;
 
-import 'package:five/core/board.dart';
+import 'package:five_core/five_core.dart';
 
 /// 七种可识别的棋型，按威胁从高到低排列。
 enum Pattern {

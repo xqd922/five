@@ -27,6 +27,21 @@ jobs:
       - run: flutter analyze
       - run: flutter test
 
+  server:
+    name: Server Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dart-lang/setup-dart@v1
+
+      - run: dart pub get
+      - run: dart analyze
+      - run: dart test
+
   build-windows:
     name: Build Windows
     runs-on: windows-latest

@@ -16,8 +16,7 @@
 /// 留待 M2 调参阶段用对弈胜率验证后再决定是否细化。
 library;
 
-import 'package:five/core/board.dart';
-import 'package:five/core/rules.dart' show Point;
+import 'package:five_core/five_core.dart';
 
 import 'package:five/engine/patterns.dart';
 

@@ -1,0 +1,7 @@
+name: five_core
+description: Five 五子棋的核心共享库——棋盘、规则、SGF。客户端与服务端共同依赖，保证判定逻辑唯一。
+publish_to: 'none'
+version: 0.2.0
+
+environment:
+  sdk: ^3.13.1

@@ -12,7 +12,7 @@
 /// 导出的文件可直接导入奕客、Sabaki 等主流棋谱工具复盘。
 library;
 
-import 'package:five/core/rules.dart';
+import 'rules.dart';
 
 abstract final class SgfExporter {
   /// 把整局手顺转换为 SGF 文本。

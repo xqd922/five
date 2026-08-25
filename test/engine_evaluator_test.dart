@@ -6,7 +6,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:five/core/board.dart';
+import 'package:five_core/five_core.dart';
 import 'package:five/engine/evaluator.dart';
 import 'package:five/engine/patterns.dart';
 

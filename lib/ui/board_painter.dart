@@ -11,8 +11,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import 'package:five/core/board.dart';
-import 'package:five/core/rules.dart';
+import 'package:five_core/five_core.dart';
 
 /// 棋盘几何换算器。
 ///

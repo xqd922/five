@@ -9,8 +9,7 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'package:five/core/board.dart';
-import 'package:five/core/rules.dart';
+import 'package:five_core/five_core.dart';
 import 'package:five/ui/board_painter.dart';
 
 class BoardView extends StatelessWidget {

@@ -7,8 +7,7 @@
 /// 整盘才 225 字节，这个拷贝的成本可以忽略不计。
 library;
 
-import 'package:five/core/board.dart';
-import 'package:five/core/rules.dart';
+import 'package:five_core/five_core.dart';
 
 import 'package:five/engine/ai_service.dart';
 
