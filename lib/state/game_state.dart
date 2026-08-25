@@ -19,6 +19,9 @@ enum GameMode {
 
   /// 人机对战：人类执黑先行，AI 执白。
   vsAi,
+
+  /// 在线对战：由 OnlineController 驱动，服务端权威判定。
+  online,
 }
 
 /// 对局进行到的阶段。

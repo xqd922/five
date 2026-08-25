@@ -28,3 +28,27 @@ class ShowMoveNumbersController extends Notifier<bool> {
         .setBool(_moveNumbersKey, value);
   }
 }
+
+const String _serverUrlKey = 'five.server_url';
+
+/// 在线对战服务器地址。默认指向本机开发环境；
+/// 部署后用户可改成自己的服务器。
+final serverUrlProvider =
+    NotifierProvider<ServerUrlController, String>(ServerUrlController.new);
+
+class ServerUrlController extends Notifier<String> {
+  /// 默认地址：本机调试端口。
+  static const String defaultUrl = 'ws://localhost:8080';
+
+  @override
+  String build() =>
+      ref.watch(sharedPreferencesProvider).getString(_serverUrlKey) ??
+      defaultUrl;
+
+  Future<void> set(String value) async {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return;
+    state = trimmed;
+    await ref.read(sharedPreferencesProvider).setString(_serverUrlKey, trimmed);
+  }
+}

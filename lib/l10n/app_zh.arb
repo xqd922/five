@@ -10,6 +10,26 @@
 
   "vsAi": "人机对战",
 
+  "onlineMode": "在线对战",
+  "createRoom": "创建房间",
+  "joinRoom": "加入房间",
+  "roomCodeLabel": "房间号",
+  "waitingOpponent": "等待对手加入…",
+  "youPlayBlack": "你执黑先行",
+  "youPlayWhite": "你执白后行",
+  "opponentLeft": "对手掉线，等待重连…",
+  "opponentBack": "对手已回到对局",
+  "resign": "认输",
+  "rematch": "再来一局",
+  "waitingRematchReply": "已邀请再战，等待对方…",
+  "opponentWantsRematch": "对方想再来一局！",
+  "serverAddress": "对战服务器",
+  "connectionLost": "连接已断开",
+  "reconnectBtn": "重新连接",
+  "copyRoomCode": "复制房号",
+  "roomCodeCopied": "房号已复制",
+  "backToLobby": "返回大厅",
+
   "chooseDifficulty": "选择 AI 难度",
 
   "aiEasy": "入门",

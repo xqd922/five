@@ -18,8 +18,10 @@ import 'package:five/engine/ai_service.dart';
 import 'package:five/l10n/generated/app_localizations.dart';
 import 'package:five/state/game_controller.dart';
 import 'package:five/state/game_state.dart';
+import 'package:five/state/online_controller.dart';
 import 'package:five/state/settings_provider.dart';
 import 'package:five/ui/board_view.dart';
+import 'package:five/ui/screens/game_screen_online.dart';
 
 /// 对局页。
 ///
@@ -36,6 +38,11 @@ class GameScreen extends ConsumerStatefulWidget {
 
   /// 人机对战入口。
   const GameScreen.vsAi(this.aiLevel, {super.key}) : mode = GameMode.vsAi;
+
+  /// 在线对战入口（对局状态由 OnlineController 提供）。
+  const GameScreen.online({super.key})
+      : mode = GameMode.online,
+        aiLevel = null;
 
   @override
   ConsumerState<GameScreen> createState() => _GameScreenState();
@@ -58,60 +65,82 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final game = ref.watch(gameControllerProvider);
-    final showNumbers = ref.watch(showMoveNumbersProvider);
-    final controller = ref.read(gameControllerProvider.notifier);
+    final isOnline = widget.mode == GameMode.online;
 
-    // 提示按钮可用性：人机模式、对局中、轮到人类、无后台任务。
-    final canHint = game.mode == GameMode.vsAi &&
+    // —— 状态源分流：联机读 OnlineController，本地读 GameController ——
+    // 渲染层只认 GameState，两种模式的棋盘绘制完全一致。
+    final GameState game;
+    final OnlineState? online;
+    if (isOnline) {
+      final state = ref.watch(onlineControllerProvider);
+      online = state;
+      game = state.game;
+    } else {
+      online = null;
+      game = ref.watch(gameControllerProvider);
+    }
+    final showNumbers = ref.watch(showMoveNumbersProvider);
+    final localController = ref.read(gameControllerProvider.notifier);
+
+    // 提示按钮可用性：仅人机模式（联机用 AI 提示属于作弊）、对局中。
+    final canHint = !isOnline &&
+        game.mode == GameMode.vsAi &&
         game.status == GameStatus.playing &&
         !game.isAiTurn &&
         !game.aiThinking &&
         !game.hintLoading;
 
-    // 监听终局：状态一变就弹出结算框。
-    // ref.listen 写在 build 里，但回调在状态变化时才触发，
-    // 且自动做了去重——不会因为界面重建而重复弹出。
-    ref.listen(gameControllerProvider, (previous, next) {
-      final justEnded = previous != null &&
-          previous.status == GameStatus.playing &&
-          next.status != GameStatus.playing;
-      if (justEnded) _showResultDialog(context, ref, next, l10n);
-    });
+    // 终局自动弹窗仅限本地模式；联机的结算与再战走底部操作区。
+    // ref.listen 写在 build 里，但回调只在状态变化时触发，
+    // 且自动去重——不会因界面重建而重复弹出。
+    if (!isOnline) {
+      ref.listen(gameControllerProvider, (previous, next) {
+        final justEnded = previous != null &&
+            previous.status == GameStatus.playing &&
+            next.status != GameStatus.playing;
+        if (justEnded) _showResultDialog(context, ref, next, l10n);
+      });
+    }
 
     // 桌面端键盘快捷键。Windows/Linux 用 Ctrl，macOS 自动匹配 Cmd——
     // 同一动作注册两种修饰键，各平台只会命中自己那组。
-    // 移动端没有物理键盘，CallbackShortcuts 静默无副作用。
+    // 联机模式不提供悔棋/提示快捷键（对方在场，操作语义不同）。
     return CallbackShortcuts(
       bindings: {
-        const SingleActivator(LogicalKeyboardKey.keyZ, control: true):
-            controller.undo,
-        const SingleActivator(LogicalKeyboardKey.keyZ, meta: true):
-            controller.undo,
+        // Map 字面量中的条件键值对写法：if (cond) key: value。
+        if (!isOnline)
+          const SingleActivator(LogicalKeyboardKey.keyZ, control: true):
+              localController.undo,
+        if (!isOnline)
+          const SingleActivator(LogicalKeyboardKey.keyZ, meta: true):
+              localController.undo,
+        if (!isOnline)
+          const SingleActivator(LogicalKeyboardKey.keyH, control: true):
+              localController.requestHint,
+        if (!isOnline)
+          const SingleActivator(LogicalKeyboardKey.keyH, meta: true):
+              localController.requestHint,
         const SingleActivator(LogicalKeyboardKey.keyR, control: true):
             () => _restartWithConfirm(context, ref, game, l10n),
         const SingleActivator(LogicalKeyboardKey.keyR, meta: true):
             () => _restartWithConfirm(context, ref, game, l10n),
-        const SingleActivator(LogicalKeyboardKey.keyH, control: true):
-            controller.requestHint,
-        const SingleActivator(LogicalKeyboardKey.keyH, meta: true):
-            controller.requestHint,
       },
       child: Scaffold(
       appBar: AppBar(
         title: Text(l10n.appTitle),
         actions: [
-          IconButton(
-            tooltip: l10n.hint,
-            icon: game.hintLoading
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.lightbulb_outline_rounded),
-            onPressed: canHint ? controller.requestHint : null,
-          ),
+          if (!isOnline)
+            IconButton(
+              tooltip: l10n.hint,
+              icon: game.hintLoading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.lightbulb_outline_rounded),
+              onPressed: canHint ? localController.requestHint : null,
+            ),
           PopupMenuButton<String>(
             onSelected: (value) {
               if (value == 'export') _exportSgf(context, ref, game, l10n);
@@ -149,12 +178,13 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 moves: game.moves,
                 showMoveNumbers: showNumbers,
                 hint: showingFinalBoard ? game.hint : null,
-                onCellTap: game.status == GameStatus.playing &&
-                        !game.aiThinking &&
-                        !game.hintLoading &&
-                        game.replayIndex == null
-                    ? (cell) => controller.placeAt(cell.x, cell.y)
-                    : null, // 终局/思考中/回放中：棋盘只读
+                onCellTap: _canPlace(game, online)
+                    ? (cell) => isOnline
+                        ? ref
+                            .read(onlineControllerProvider.notifier)
+                            .placeAt(cell.x, cell.y)
+                        : localController.placeAt(cell.x, cell.y)
+                    : null, // 非我回合/终局/思考中/回放中：棋盘只读
               ),
             ),
           ),
@@ -169,7 +199,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 child: Column(
                   children: [
                     Expanded(child: boardArea),
-                    if (game.status != GameStatus.playing)
+                    if (!isOnline && game.status != GameStatus.playing)
                       _ReplayBar(game: game),
                   ],
                 ),
@@ -178,7 +208,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 width: 300,
                 child: Padding(
                   padding: const EdgeInsets.all(24),
-                  child: _SidePanel(game: game),
+                  child: isOnline
+                      ? OnlineSidePanel(online: online!)
+                      : _SidePanel(game: game),
                 ),
               ),
             ],
@@ -188,15 +220,29 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         // —— 窄屏：纵向排列 ——
         return Column(
           children: [
-            _TurnBanner(game: game),
+            isOnline
+                ? OnlineTurnBanner(online: online!, moveCount: game.moves.length)
+                : _TurnBanner(game: game),
             Expanded(child: boardArea),
-            if (game.status != GameStatus.playing) _ReplayBar(game: game),
-            _BottomActions(game: game),
+            if (!isOnline && game.status != GameStatus.playing)
+              _ReplayBar(game: game),
+            isOnline
+                ? OnlineBottomActions(online: online!)
+                : _BottomActions(game: game),
           ],
         );
       }),
       ),
     );
+  }
+
+  /// 棋盘是否可落子（两种模式统一在此判定）。
+  bool _canPlace(GameState game, OnlineState? online) {
+    if (game.status != GameStatus.playing) return false;
+    if (game.replayIndex != null) return false; // 回放中只读
+    if (online != null) return online.isMyTurn; // 联机：轮到我
+    // 本地：非 AI 回合且无后台任务。
+    return !game.aiThinking && !game.hintLoading && !game.isAiTurn;
   }
 
   /// 终局结算弹窗：展示胜负 + 「再来一局」或返回主页。

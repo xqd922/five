@@ -25,6 +25,63 @@ class AppLocalizationsZh extends AppLocalizations {
   String get vsAi => '人机对战';
 
   @override
+  String get onlineMode => '在线对战';
+
+  @override
+  String get createRoom => '创建房间';
+
+  @override
+  String get joinRoom => '加入房间';
+
+  @override
+  String get roomCodeLabel => '房间号';
+
+  @override
+  String get waitingOpponent => '等待对手加入…';
+
+  @override
+  String get youPlayBlack => '你执黑先行';
+
+  @override
+  String get youPlayWhite => '你执白后行';
+
+  @override
+  String get opponentLeft => '对手掉线，等待重连…';
+
+  @override
+  String get opponentBack => '对手已回到对局';
+
+  @override
+  String get resign => '认输';
+
+  @override
+  String get rematch => '再来一局';
+
+  @override
+  String get waitingRematchReply => '已邀请再战，等待对方…';
+
+  @override
+  String get opponentWantsRematch => '对方想再来一局！';
+
+  @override
+  String get serverAddress => '对战服务器';
+
+  @override
+  String get connectionLost => '连接已断开';
+
+  @override
+  String get reconnectBtn => '重新连接';
+
+  @override
+  String get copyRoomCode => '复制房号';
+
+  @override
+  String get roomCodeCopied => '房号已复制';
+
+  @override
+  String get backToLobby => '返回大厅';
+
+  @override
   String get chooseDifficulty => '选择 AI 难度';
 
   @override

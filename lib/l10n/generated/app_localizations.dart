@@ -128,6 +128,120 @@ abstract class AppLocalizations {
   /// **'Play vs AI'**
   String get vsAi;
 
+  /// No description provided for @onlineMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get onlineMode;
+
+  /// No description provided for @createRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Room'**
+  String get createRoom;
+
+  /// No description provided for @joinRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Join Room'**
+  String get joinRoom;
+
+  /// No description provided for @roomCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Room code'**
+  String get roomCodeLabel;
+
+  /// No description provided for @waitingOpponent.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for opponent…'**
+  String get waitingOpponent;
+
+  /// No description provided for @youPlayBlack.
+  ///
+  /// In en, this message translates to:
+  /// **'You play black (first)'**
+  String get youPlayBlack;
+
+  /// No description provided for @youPlayWhite.
+  ///
+  /// In en, this message translates to:
+  /// **'You play white'**
+  String get youPlayWhite;
+
+  /// No description provided for @opponentLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Opponent disconnected, waiting…'**
+  String get opponentLeft;
+
+  /// No description provided for @opponentBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Opponent reconnected'**
+  String get opponentBack;
+
+  /// No description provided for @resign.
+  ///
+  /// In en, this message translates to:
+  /// **'Resign'**
+  String get resign;
+
+  /// No description provided for @rematch.
+  ///
+  /// In en, this message translates to:
+  /// **'Rematch'**
+  String get rematch;
+
+  /// No description provided for @waitingRematchReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Rematch invited, waiting…'**
+  String get waitingRematchReply;
+
+  /// No description provided for @opponentWantsRematch.
+  ///
+  /// In en, this message translates to:
+  /// **'Opponent wants a rematch!'**
+  String get opponentWantsRematch;
+
+  /// No description provided for @serverAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Game server'**
+  String get serverAddress;
+
+  /// No description provided for @connectionLost.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected'**
+  String get connectionLost;
+
+  /// No description provided for @reconnectBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnect'**
+  String get reconnectBtn;
+
+  /// No description provided for @copyRoomCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy room code'**
+  String get copyRoomCode;
+
+  /// No description provided for @roomCodeCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Room code copied'**
+  String get roomCodeCopied;
+
+  /// No description provided for @backToLobby.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to lobby'**
+  String get backToLobby;
+
   /// No description provided for @chooseDifficulty.
   ///
   /// In en, this message translates to:

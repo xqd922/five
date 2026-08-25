@@ -10,6 +10,7 @@ import 'package:five/state/game_controller.dart';
 import 'package:five/state/game_state.dart';
 import 'package:five/state/theme_provider.dart';
 import 'package:five/ui/screens/game_screen.dart';
+import 'package:five/ui/screens/online_lobby_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -113,6 +114,16 @@ class HomeScreen extends ConsumerWidget {
                   title: l10n.vsAi,
                   subtitle: l10n.chooseDifficulty,
                   onTap: () => _pickDifficultyAndStart(context, ref),
+                ),
+                const SizedBox(height: 12),
+                _ModeCard(
+                  icon: Icons.wifi_rounded,
+                  title: l10n.onlineMode,
+                  subtitle: l10n.createRoom,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                        builder: (_) => const OnlineLobbyScreen()),
+                  ),
                 ),
                 const SizedBox(height: 32),
 

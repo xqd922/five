@@ -25,6 +25,63 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vsAi => 'Play vs AI';
 
   @override
+  String get onlineMode => 'Online';
+
+  @override
+  String get createRoom => 'Create Room';
+
+  @override
+  String get joinRoom => 'Join Room';
+
+  @override
+  String get roomCodeLabel => 'Room code';
+
+  @override
+  String get waitingOpponent => 'Waiting for opponent…';
+
+  @override
+  String get youPlayBlack => 'You play black (first)';
+
+  @override
+  String get youPlayWhite => 'You play white';
+
+  @override
+  String get opponentLeft => 'Opponent disconnected, waiting…';
+
+  @override
+  String get opponentBack => 'Opponent reconnected';
+
+  @override
+  String get resign => 'Resign';
+
+  @override
+  String get rematch => 'Rematch';
+
+  @override
+  String get waitingRematchReply => 'Rematch invited, waiting…';
+
+  @override
+  String get opponentWantsRematch => 'Opponent wants a rematch!';
+
+  @override
+  String get serverAddress => 'Game server';
+
+  @override
+  String get connectionLost => 'Disconnected';
+
+  @override
+  String get reconnectBtn => 'Reconnect';
+
+  @override
+  String get copyRoomCode => 'Copy room code';
+
+  @override
+  String get roomCodeCopied => 'Room code copied';
+
+  @override
+  String get backToLobby => 'Back to lobby';
+
+  @override
   String get chooseDifficulty => 'Choose AI difficulty';
 
   @override
