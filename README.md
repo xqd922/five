@@ -34,12 +34,25 @@ flutter pub get
 flutter test          # 34+ 单元测试
 flutter run -d windows
 
-# 发布包
+# 本地发布包（可选——正式发版走 CI，见下）
 flutter build apk --release          # Android
 flutter build windows --release      # Windows
 
 # 服务端（见下节）
 ```
+
+## 发版（全自动）
+
+推送 `v*` 标签即触发 GitHub Actions 双平台构建，产物自动挂到 Release：
+
+```bash
+git tag v1.x.y && git push origin v1.x.y
+```
+
+日常推送由 CI 自动执行：分析 + 测试（客户端与服务端）+ Windows/APK 打包，
+产物可在 Actions 页面的 Artifacts 下载。
+
+> Android APK 使用 debug 签名（自用/侧载足够；上架商店需配置正式签名）。
 
 > Windows 桌面构建需要 Visual Studio 2022「使用 C++ 的桌面开发」工作负载；
 > 插件构建需要开启 Windows 开发者模式。
