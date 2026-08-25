@@ -100,7 +100,7 @@ class BoardPalette {
 
 /// 棋盘画笔。
 class BoardPainter extends CustomPainter {
-  /// 当前盘面。
+  /// 要绘制的盘面。
   final Board board;
 
   /// 最近一手（画标记用）；可为 null。
@@ -109,6 +109,15 @@ class BoardPainter extends CustomPainter {
   /// 获胜连线（画高亮用）；可为 null。
   final List<Point>? winLine;
 
+  /// 手顺表（配合 [showMoveNumbers] 在每颗子上标序号）。
+  final List<Point> moves;
+
+  /// 是否显示手数数字。
+  final bool showMoveNumbers;
+
+  /// AI 提示落点（画特殊标记）；可为 null。
+  final Point? hint;
+
   /// 配色。
   final BoardPalette palette;
 
@@ -116,6 +125,9 @@ class BoardPainter extends CustomPainter {
     required this.board,
     required this.lastMove,
     required this.winLine,
+    this.moves = const [],
+    this.showMoveNumbers = false,
+    this.hint,
     required this.palette,
   });
 
@@ -125,7 +137,13 @@ class BoardPainter extends CustomPainter {
 
     _drawBase(canvas, size);
     _drawGrid(canvas, geo);
+    if (hint != null && board.get(hint!.x, hint!.y) == Cell.empty) {
+      _drawHintMark(canvas, geo, hint!);
+    }
     _drawStones(canvas, geo);
+    if (showMoveNumbers) {
+      _drawMoveNumbers(canvas, geo);
+    }
     if (winLine != null) {
       _drawWinLine(canvas, geo, winLine!);
     }
@@ -238,6 +256,62 @@ class BoardPainter extends CustomPainter {
     canvas.drawCircle(geo.toPixel(move.x, move.y), geo.cellSize * 0.18, paint);
   }
 
+  /// AI 提示标记：半透明主色圆盘 + 细描边，视觉上「悬浮」于棋盘之上、
+  /// 与真实棋子明显区分。只在空位上绘制。
+  void _drawHintMark(Canvas canvas, BoardGeometry geo, Point point) {
+    final center = geo.toPixel(point.x, point.y);
+    final radius = geo.cellSize * 0.44;
+
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()..color = palette.winLine.withValues(alpha: .28),
+    );
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..color = palette.winLine
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = geo.cellSize / 12,
+    );
+  }
+
+  /// 手数数字：每颗子上标出它是第几乎（1 起）。
+  ///
+  /// 用 TextPainter 把文字画进 Canvas；字号随格子缩放，
+  /// 黑子上用白字、白子上用黑字保证对比度。
+  void _drawMoveNumbers(Canvas canvas, BoardGeometry geo) {
+    if (moves.isEmpty) return;
+
+    final fontSize = geo.cellSize * 0.42;
+    for (var i = 0; i < moves.length; i++) {
+      final move = moves[i];
+      if (board.get(move.x, move.y) == Cell.empty) continue; // 回放安全防护
+
+      final isBlackStone =
+          board.get(move.x, move.y) == Cell.black;
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: '${i + 1}',
+          style: TextStyle(
+            color: isBlackStone ? Colors.white : Colors.black,
+            fontSize: fontSize,
+            fontWeight: FontWeight.w600,
+            height: 1,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+
+      textPainter.paint(
+        canvas,
+        geo.toPixel(move.x, move.y) -
+            Offset(textPainter.width / 2, textPainter.height / 2),
+      );
+    }
+  }
+
   /// 胜利连线：一条粗描边从线头贯穿到线尾，端点是圆帽。
   void _drawWinLine(Canvas canvas, BoardGeometry geo, List<Point> line) {
     if (line.isEmpty) return;
@@ -252,11 +326,14 @@ class BoardPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant BoardPainter oldDelegate) {
-    // 盘面内容变化的可观测信号：手数不同、末手不同、胜负出现。
+    // 盘面内容变化的可观测信号：手数不同、末手不同、胜负出现、
+    // 提示变化、显示开关切换。
     // 手数相同但末手不同的情况出现在「悔棋后改下别处」。
     return oldDelegate.board.stoneCount != board.stoneCount ||
         oldDelegate.lastMove != lastMove ||
         oldDelegate.winLine != winLine ||
+        oldDelegate.hint != hint ||
+        oldDelegate.showMoveNumbers != showMoveNumbers ||
         oldDelegate.palette != palette;
   }
 }

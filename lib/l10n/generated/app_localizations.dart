@@ -248,6 +248,42 @@ abstract class AppLocalizations {
   /// **'Home'**
   String get backHome;
 
+  /// Ask AI for a suggested move
+  ///
+  /// In en, this message translates to:
+  /// **'Hint'**
+  String get hint;
+
+  /// No description provided for @exportSgf.
+  ///
+  /// In en, this message translates to:
+  /// **'Export SGF'**
+  String get exportSgf;
+
+  /// No description provided for @sgfSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Game record saved'**
+  String get sgfSaved;
+
+  /// No description provided for @exportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save file'**
+  String get exportFailed;
+
+  /// Toggle numbering stones on the board
+  ///
+  /// In en, this message translates to:
+  /// **'Move numbers'**
+  String get showMoveNumbers;
+
+  /// Replay position indicator
+  ///
+  /// In en, this message translates to:
+  /// **'{index}/{total}'**
+  String replayPosition(int index, int total);
+
   /// No description provided for @restartConfirmTitle.
   ///
   /// In en, this message translates to:

@@ -52,6 +52,25 @@
   "restart": "Restart",
   "backHome": "Home",
 
+  "hint": "Hint",
+  "@hint": { "description": "Ask AI for a suggested move" },
+
+  "exportSgf": "Export SGF",
+  "@exportSgf": {},
+  "sgfSaved": "Game record saved",
+  "@sgfSaved": {},
+  "exportFailed": "Failed to save file",
+  "@exportFailed": {},
+
+  "showMoveNumbers": "Move numbers",
+  "@showMoveNumbers": { "description": "Toggle numbering stones on the board" },
+
+  "replayPosition": "{index}/{total}",
+  "@replayPosition": {
+    "description": "Replay position indicator",
+    "placeholders": { "index": { "type": "int" }, "total": { "type": "int" } }
+  },
+
   "restartConfirmTitle": "Restart game?",
   "restartConfirmBody": "The current game will be discarded.",
   "confirm": "Confirm",

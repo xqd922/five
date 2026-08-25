@@ -40,6 +40,16 @@
   "restart": "重新开始",
   "backHome": "主页",
 
+  "hint": "提示",
+
+  "exportSgf": "导出棋谱",
+  "sgfSaved": "棋谱已保存",
+  "exportFailed": "文件保存失败",
+
+  "showMoveNumbers": "手数标记",
+
+  "replayPosition": "{index}/{total}",
+
   "restartConfirmTitle": "重新开始？",
   "restartConfirmBody": "当前对局将被丢弃。",
   "confirm": "确定",

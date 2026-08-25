@@ -87,6 +87,26 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backHome => '主页';
 
   @override
+  String get hint => '提示';
+
+  @override
+  String get exportSgf => '导出棋谱';
+
+  @override
+  String get sgfSaved => '棋谱已保存';
+
+  @override
+  String get exportFailed => '文件保存失败';
+
+  @override
+  String get showMoveNumbers => '手数标记';
+
+  @override
+  String replayPosition(int index, int total) {
+    return '$index/$total';
+  }
+
+  @override
   String get restartConfirmTitle => '重新开始？';
 
   @override

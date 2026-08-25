@@ -87,6 +87,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backHome => 'Home';
 
   @override
+  String get hint => 'Hint';
+
+  @override
+  String get exportSgf => 'Export SGF';
+
+  @override
+  String get sgfSaved => 'Game record saved';
+
+  @override
+  String get exportFailed => 'Failed to save file';
+
+  @override
+  String get showMoveNumbers => 'Move numbers';
+
+  @override
+  String replayPosition(int index, int total) {
+    return '$index/$total';
+  }
+
+  @override
   String get restartConfirmTitle => 'Restart game?';
 
   @override

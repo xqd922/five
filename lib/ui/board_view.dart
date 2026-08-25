@@ -3,7 +3,7 @@
 /// 【职责边界】本组件是「哑」的：
 /// 它只负责展示传入的盘面、把手势换算成格坐标后回调出去。
 /// 落子规则、状态变更全部由上层（GameScreen → GameController）处理。
-/// 这样拆分让棋盘可以被任意场景复用（对局、将来的复盘回放），
+/// 这样拆分让棋盘可以被任意场景复用（对局、复盘回放），
 /// 也让手势换算逻辑可以脱离业务单独测试。
 library;
 
@@ -23,6 +23,15 @@ class BoardView extends StatelessWidget {
   /// 获胜连线（胜利高亮）。
   final List<Point>? winLine;
 
+  /// 手顺表（手数标记用）。
+  final List<Point> moves;
+
+  /// 是否显示落子顺序数字。
+  final bool showMoveNumbers;
+
+  /// AI 提示标记位置。
+  final Point? hint;
+
   /// 玩家点击了某个交叉点；无效点击（界外/半格外）不会触发。
   ///
   /// 对局结束后上层应传 null 来冻结输入，而不是在这里判断状态。
@@ -33,6 +42,9 @@ class BoardView extends StatelessWidget {
     required this.board,
     required this.lastMove,
     required this.winLine,
+    this.moves = const [],
+    this.showMoveNumbers = false,
+    this.hint,
     this.onCellTap,
   });
 
@@ -49,6 +61,9 @@ class BoardView extends StatelessWidget {
           board: board,
           lastMove: lastMove,
           winLine: winLine,
+          moves: moves,
+          showMoveNumbers: showMoveNumbers,
+          hint: hint,
           palette: palette,
         ),
         child: interactive

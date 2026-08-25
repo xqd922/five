@@ -6,14 +6,19 @@
 /// 断点取 880 逻辑像素——足够区分「单手握持」与「桌面窗口」。
 library;
 
+import 'dart:io';
+
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:five/core/board.dart';
+import 'package:five/core/sgf.dart';
 import 'package:five/engine/ai_service.dart';
 import 'package:five/l10n/generated/app_localizations.dart';
 import 'package:five/state/game_controller.dart';
 import 'package:five/state/game_state.dart';
+import 'package:five/state/settings_provider.dart';
 import 'package:five/ui/board_view.dart';
 
 /// 对局页。
@@ -54,7 +59,15 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final game = ref.watch(gameControllerProvider);
+    final showNumbers = ref.watch(showMoveNumbersProvider);
     final controller = ref.read(gameControllerProvider.notifier);
+
+    // 提示按钮可用性：人机模式、对局中、轮到人类、无后台任务。
+    final canHint = game.mode == GameMode.vsAi &&
+        game.status == GameStatus.playing &&
+        !game.isAiTurn &&
+        !game.aiThinking &&
+        !game.hintLoading;
 
     // 监听终局：状态一变就弹出结算框。
     // ref.listen 写在 build 里，但回调在状态变化时才触发，
@@ -67,8 +80,44 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     });
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.appTitle)),
+      appBar: AppBar(
+        title: Text(l10n.appTitle),
+        actions: [
+          IconButton(
+            tooltip: l10n.hint,
+            icon: game.hintLoading
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.lightbulb_outline_rounded),
+            onPressed: canHint ? controller.requestHint : null,
+          ),
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'export') _exportSgf(context, ref, game, l10n);
+              if (value == 'numbers') {
+                ref
+                    .read(showMoveNumbersProvider.notifier)
+                    .set(!showNumbers);
+              }
+            },
+            itemBuilder: (_) => [
+              PopupMenuItem(value: 'export', child: Text(l10n.exportSgf)),
+              CheckedPopupMenuItem(
+                value: 'numbers',
+                checked: showNumbers,
+                child: Text(l10n.showMoveNumbers),
+              ),
+            ],
+          ),
+        ],
+      ),
       body: LayoutBuilder(builder: (context, constraints) {
+        // 回放中显示历史盘面；胜利线只在与最终局面一致时绘制。
+        final showingFinalBoard =
+            game.replayIndex == null || game.replayIndex == game.moves.length;
         final boardArea = Center(
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -76,24 +125,37 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               // 桌面上棋盘也不宜无限放大：上限 640px 保持观感。
               constraints: const BoxConstraints(maxWidth: 640),
               child: BoardView(
-                board: game.board,
-                lastMove: game.lastMove,
-                winLine: game.winInfo?.line,
-                onCellTap:
-                    game.status == GameStatus.playing && !game.aiThinking
-                        ? (cell) => controller.placeAt(cell.x, cell.y)
-                        : null, // 终局或 AI 思考中：棋盘只读
+                board: game.displayBoard,
+                lastMove: game.displayLastMove,
+                winLine: showingFinalBoard ? game.winInfo?.line : null,
+                moves: game.moves,
+                showMoveNumbers: showNumbers,
+                hint: showingFinalBoard ? game.hint : null,
+                onCellTap: game.status == GameStatus.playing &&
+                        !game.aiThinking &&
+                        !game.hintLoading &&
+                        game.replayIndex == null
+                    ? (cell) => controller.placeAt(cell.x, cell.y)
+                    : null, // 终局/思考中/回放中：棋盘只读
               ),
             ),
           ),
         );
 
         if (constraints.maxWidth >= 880) {
-          // —— 宽屏：左棋盘 + 右面板 ——
+          // —— 宽屏：左棋盘(+回放条) + 右面板 ——
           return Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Expanded(child: boardArea),
+              Expanded(
+                child: Column(
+                  children: [
+                    Expanded(child: boardArea),
+                    if (game.status != GameStatus.playing)
+                      _ReplayBar(game: game),
+                  ],
+                ),
+              ),
               SizedBox(
                 width: 300,
                 child: Padding(
@@ -110,6 +172,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           children: [
             _TurnBanner(game: game),
             Expanded(child: boardArea),
+            if (game.status != GameStatus.playing) _ReplayBar(game: game),
             _BottomActions(game: game),
           ],
         );
@@ -198,6 +261,107 @@ Future<void> _restartWithConfirm(
 
   if (confirmed && context.mounted) {
     ref.read(gameControllerProvider.notifier).restart();
+  }
+}
+
+/// 导出当前对局为 SGF 棋谱文件。
+///
+/// file_selector 弹出系统「另存为」对话框（Windows/macOS/桌面端原生体验，
+/// Android 走 SAF）。用户取消则静默返回。
+Future<void> _exportSgf(
+  BuildContext context,
+  WidgetRef ref,
+  GameState game,
+  AppLocalizations l10n,
+) async {
+  if (game.moves.isEmpty) return; // 空局没有可导出的内容。
+
+  final location = await getSaveLocation(
+    suggestedName:
+        'five_${DateTime.now().millisecondsSinceEpoch ~/ 1000}.sgf',
+  );
+  if (location == null || !context.mounted) return; // 用户取消
+
+  final result = switch (game.status) {
+    GameStatus.won =>
+      game.winInfo!.winner == Cell.black ? 'B+' : 'W+',
+    GameStatus.draw => '0',
+    GameStatus.playing => null,
+  };
+  final sgf = SgfExporter.export(moves: game.moves, result: result);
+
+  try {
+    await File(location.path).writeAsString(sgf);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.sgfSaved)),
+      );
+    }
+  } on FileSystemException {
+    // 写盘失败（权限/磁盘）：不打断对局，仅提示。
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.exportFailed)),
+      );
+    }
+  }
+}
+
+/// 终局后的复盘回放控制条：⏮ ◀ 位置 ▶ ⏭。
+class _ReplayBar extends ConsumerWidget {
+  final GameState game;
+
+  const _ReplayBar({required this.game});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    // 当前查看位置：null 表示正显示最终盘面，等价于第 n 手。
+    final total = game.moves.length;
+    final index = game.replayIndex ?? total;
+
+    void moveTo(int i) =>
+        ref.read(gameControllerProvider.notifier).replayTo(i.clamp(0, total));
+
+    return SafeArea(
+      top: false,
+      minimum: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        children: [
+          IconButton(
+            tooltip: '⏮',
+            onPressed: index > 0 ? () => moveTo(0) : null,
+            icon: const Icon(Icons.skip_previous_rounded),
+          ),
+          IconButton(
+            tooltip: '◀',
+            onPressed: index > 0 ? () => moveTo(index - 1) : null,
+            icon: const Icon(Icons.chevron_left_rounded),
+          ),
+          Expanded(
+            child: Text(
+              l10n.replayPosition(index, total),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: '▶',
+            onPressed: index < total ? () => moveTo(index + 1) : null,
+            icon: const Icon(Icons.chevron_right_rounded),
+          ),
+          IconButton(
+            tooltip: '⏭',
+            onPressed: index < total ? () => moveTo(total) : null,
+            icon: const Icon(Icons.skip_next_rounded),
+          ),
+        ],
+      ),
+    );
   }
 }
 
