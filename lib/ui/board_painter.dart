@@ -117,6 +117,13 @@ class BoardPainter extends CustomPainter {
   /// AI 提示落点（画特殊标记）；可为 null。
   final Point? hint;
 
+  /// 正在播放入场动画的棋子；可为 null（无动画）。
+  final Point? droppingStone;
+
+  /// 入场缩放系数：0 = 刚出现，1 = 完全落下。easeOutBack 曲线会
+  /// 短暂超过 1 再回弹，形成「弹」的手感。
+  final double dropScale;
+
   /// 配色。
   final BoardPalette palette;
 
@@ -127,6 +134,8 @@ class BoardPainter extends CustomPainter {
     this.moves = const [],
     this.showMoveNumbers = false,
     this.hint,
+    this.droppingStone,
+    this.dropScale = 1.0,
     required this.palette,
   });
 
@@ -207,12 +216,18 @@ class BoardPainter extends CustomPainter {
 
   /// 全部棋子：圆形 + 微阴影，黑子深色白子浅色。
   void _drawStones(Canvas canvas, BoardGeometry geo) {
-    final radius = geo.cellSize * 0.44;
+    final baseRadius = geo.cellSize * 0.44;
 
     for (var y = 0; y < Board.size; y++) {
       for (var x = 0; x < Board.size; x++) {
         final stone = board.get(x, y);
         if (stone == Cell.empty) continue;
+
+        // 入场动画：正在弹入的子按曲线缩放，其余保持原大。
+        final isDropping =
+            droppingStone != null && droppingStone!.x == x && droppingStone!.y == y;
+        final radius = baseRadius * (isDropping ? dropScale : 1.0);
+        if (radius <= 0.01) continue; // 缩放起点为 0 时直接跳过绘制
 
         final center = geo.toPixel(x, y);
 
@@ -332,6 +347,8 @@ class BoardPainter extends CustomPainter {
         oldDelegate.lastMove != lastMove ||
         oldDelegate.winLine != winLine ||
         oldDelegate.hint != hint ||
+        oldDelegate.droppingStone != droppingStone ||
+        oldDelegate.dropScale != dropScale ||
         oldDelegate.showMoveNumbers != showMoveNumbers ||
         oldDelegate.palette != palette;
   }

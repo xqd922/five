@@ -284,6 +284,30 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settingsTitle;
 
+  /// No description provided for @statsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Record vs AI'**
+  String get statsTitle;
+
+  /// No description provided for @statsWins.
+  ///
+  /// In en, this message translates to:
+  /// **'W'**
+  String get statsWins;
+
+  /// No description provided for @statsLosses.
+  ///
+  /// In en, this message translates to:
+  /// **'L'**
+  String get statsLosses;
+
+  /// No description provided for @statsDraws.
+  ///
+  /// In en, this message translates to:
+  /// **'D'**
+  String get statsDraws;
+
   /// Section label for light/dark theme selection
   ///
   /// In en, this message translates to:

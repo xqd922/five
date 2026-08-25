@@ -103,6 +103,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTitle => 'Settings';
 
   @override
+  String get statsTitle => 'Record vs AI';
+
+  @override
+  String get statsWins => 'W';
+
+  @override
+  String get statsLosses => 'L';
+
+  @override
+  String get statsDraws => 'D';
+
+  @override
   String get themeModeTitle => 'Theme';
 
   @override

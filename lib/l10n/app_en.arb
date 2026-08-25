@@ -51,6 +51,11 @@
   "settingsTitle": "Settings",
   "@settingsTitle": {},
 
+  "statsTitle": "Record vs AI",
+  "statsWins": "W",
+  "statsLosses": "L",
+  "statsDraws": "D",
+
   "themeModeTitle": "Theme",
   "@themeModeTitle": { "description": "Section label for light/dark theme selection" },
   "themeSystem": "System",

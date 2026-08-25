@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 0.2.0+2
+version: 1.0.0+3
 
 environment:
   sdk: ^3.13.1
@@ -58,6 +58,22 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  image: ^4.9.2
+  flutter_launcher_icons: ^0.14.4
+
+# 应用图标：源图由 tool/generate_icon.dart 程序化生成，
+# 改设计后重跑两个命令即可：dart run tool/generate_icon.dart
+# 然后 dart run flutter_launcher_icons
+flutter_launcher_icons:
+  image_path: "assets/icon.png"
+  android: true
+  ios: true
+  windows:
+    generate: true
+    icon_size: 256
+  macos:
+    generate: true
+  linux: true
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

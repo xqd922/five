@@ -19,6 +19,7 @@ import 'package:five_core/five_core.dart';
 
 import 'package:five/engine/ai_service.dart';
 import 'package:five/state/game_state.dart';
+import 'package:five/state/stats_provider.dart';
 
 /// 全局唯一的对局状态提供者。
 final gameControllerProvider =
@@ -31,12 +32,16 @@ class GameController extends Notifier<GameState> {
   /// 异步任务的失效代数：任何局面重置都会使其增长。
   int _aiGeneration = 0;
 
+  /// 当前这局是否已计入战绩（防止「终局→悔棋→再终局」重复计数）。
+  bool _resultCounted = false;
+
   /// 按指定配置开一局新棋（首页选完模式/难度后调用）。
   void startNewGame({
     GameMode mode = GameMode.localTwoPlayer,
     AiLevel? aiLevel,
   }) {
     _aiGeneration++; // 作废一切在途的 AI 计算。
+    _resultCounted = false; // 新的一局，战绩重新可计。
     state = GameState(
       board: Board(),
       moves: const [],
@@ -89,6 +94,21 @@ class GameController extends Notifier<GameState> {
       aiStone: current.aiStone,
       // hint 清空、replayIndex 清空：见方法注释。
     );
+
+    _recordResultIfNeeded(newStatus);
+  }
+
+  /// 终局时把人机模式的结果计入战绩（每局只计一次）。
+  void _recordResultIfNeeded(GameStatus status) {
+    if (_resultCounted || status == GameStatus.playing) return;
+    if (state.mode != GameMode.vsAi) return;
+    _resultCounted = true;
+    // 人执黑、AI 执白：黑胜=人胜，白胜=AI 胜。
+    ref.read(statsProvider.notifier).record(
+          humanWon: status == GameStatus.draw
+              ? null
+              : state.winInfo!.winner == Cell.black,
+        );
   }
 
   // ------------------------------------------------------------------

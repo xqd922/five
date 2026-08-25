@@ -8,6 +8,7 @@ import 'package:five/engine/ai_service.dart';
 import 'package:five/l10n/generated/app_localizations.dart';
 import 'package:five/state/game_controller.dart';
 import 'package:five/state/game_state.dart';
+import 'package:five/state/stats_provider.dart';
 import 'package:five/state/theme_provider.dart';
 import 'package:five/ui/screens/game_screen.dart';
 import 'package:five/ui/screens/online_lobby_screen.dart';
@@ -127,6 +128,10 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 32),
 
+                // —— 人机战绩 ——
+                _StatsCard(),
+                const SizedBox(height: 12),
+
                 // —— 设置区 ——
                 Card(
                   margin: EdgeInsets.zero,
@@ -224,6 +229,84 @@ class _ModeCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// 人机战绩卡：胜 / 负 / 和 三格统计。
+class _StatsCard extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final stats = ref.watch(statsProvider);
+
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.leaderboard_rounded,
+                    size: 20, color: theme.colorScheme.onSurfaceVariant),
+                const SizedBox(width: 8),
+                Text(l10n.statsTitle, style: theme.textTheme.titleMedium),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                _StatCell(l10n.statsWins, stats.wins,
+                    theme.colorScheme.primary),
+                _divider(theme),
+                _StatCell(l10n.statsLosses, stats.losses,
+                    theme.colorScheme.error),
+                _divider(theme),
+                _StatCell(l10n.statsDraws, stats.draws,
+                    theme.colorScheme.onSurfaceVariant),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _divider(ThemeData theme) => Container(
+        width: 1,
+        height: 28,
+        color: theme.colorScheme.outlineVariant,
+      );
+}
+
+/// 单个战绩数字格。
+class _StatCell extends StatelessWidget {
+  final String label;
+  final int value;
+  final Color color;
+
+  const _StatCell(this.label, this.value, this.color);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Expanded(
+      child: Column(
+        children: [
+          Text('$value',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: color,
+              )),
+          Text(label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              )),
+        ],
       ),
     );
   }

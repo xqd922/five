@@ -103,6 +103,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsTitle => '设置';
 
   @override
+  String get statsTitle => '人机战绩';
+
+  @override
+  String get statsWins => '胜';
+
+  @override
+  String get statsLosses => '负';
+
+  @override
+  String get statsDraws => '和';
+
+  @override
   String get themeModeTitle => '主题';
 
   @override

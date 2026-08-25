@@ -42,6 +42,11 @@
 
   "settingsTitle": "设置",
 
+  "statsTitle": "人机战绩",
+  "statsWins": "胜",
+  "statsLosses": "负",
+  "statsDraws": "和",
+
   "themeModeTitle": "主题",
   "themeSystem": "跟随系统",
   "themeLight": "浅色",
