@@ -49,3 +49,7 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# 发布包不入版本库，只作为 GitHub Release 附件
+*.zip
+*.apk
