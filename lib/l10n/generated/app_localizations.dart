@@ -122,17 +122,47 @@ abstract class AppLocalizations {
   /// **'Take turns on one device'**
   String get localTwoPlayerDesc;
 
-  /// AI opponent mode entry (coming in M2)
+  /// AI opponent mode entry
   ///
   /// In en, this message translates to:
   /// **'Play vs AI'**
   String get vsAi;
 
-  /// No description provided for @vsAiComingSoon.
+  /// No description provided for @chooseDifficulty.
   ///
   /// In en, this message translates to:
-  /// **'Coming soon'**
-  String get vsAiComingSoon;
+  /// **'Choose AI difficulty'**
+  String get chooseDifficulty;
+
+  /// No description provided for @aiEasy.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy'**
+  String get aiEasy;
+
+  /// No description provided for @aiMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get aiMedium;
+
+  /// No description provided for @aiHard.
+  ///
+  /// In en, this message translates to:
+  /// **'Hard'**
+  String get aiHard;
+
+  /// No description provided for @aiThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is thinking…'**
+  String get aiThinking;
+
+  /// No description provided for @youPlayFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'You play black and move first'**
+  String get youPlayFirst;
 
   /// No description provided for @settingsTitle.
   ///

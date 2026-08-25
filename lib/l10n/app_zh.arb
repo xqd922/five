@@ -9,7 +9,16 @@
   "localTwoPlayerDesc": "同一台设备轮流执子",
 
   "vsAi": "人机对战",
-  "vsAiComingSoon": "敬请期待",
+
+  "chooseDifficulty": "选择 AI 难度",
+
+  "aiEasy": "入门",
+  "aiMedium": "进阶",
+  "aiHard": "大师",
+
+  "aiThinking": "AI 思考中…",
+
+  "youPlayFirst": "你执黑先行",
 
   "settingsTitle": "设置",
 

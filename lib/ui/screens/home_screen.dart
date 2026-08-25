@@ -4,12 +4,68 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:five/engine/ai_service.dart';
 import 'package:five/l10n/generated/app_localizations.dart';
+import 'package:five/state/game_controller.dart';
+import 'package:five/state/game_state.dart';
 import 'package:five/state/theme_provider.dart';
 import 'package:five/ui/screens/game_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
+
+  /// 弹出难度选择，选定后配置对局并进入对局页。
+  Future<void> _pickDifficultyAndStart(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final level = await showDialog<AiLevel>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: Text(l10n.chooseDifficulty),
+        children: [
+          for (final level in AiLevel.values)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(dialogContext, level),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  children: [
+                    Icon(
+                      switch (level) {
+                        AiLevel.easy => Icons.sentiment_satisfied_rounded,
+                        AiLevel.medium => Icons.sentiment_neutral_rounded,
+                        AiLevel.hard => Icons.local_fire_department_rounded,
+                      },
+                      color: Theme.of(dialogContext).colorScheme.primary,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      switch (level) {
+                        AiLevel.easy => l10n.aiEasy,
+                        AiLevel.medium => l10n.aiMedium,
+                        AiLevel.hard => l10n.aiHard,
+                      },
+                      style: Theme.of(dialogContext).textTheme.titleMedium,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+
+    if (level == null || !context.mounted) return;
+    ref.read(gameControllerProvider.notifier).startNewGame(
+          mode: GameMode.vsAi,
+          aiLevel: level,
+        );
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => GameScreen.vsAi(level)),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -55,9 +111,8 @@ class HomeScreen extends ConsumerWidget {
                 _ModeCard(
                   icon: Icons.psychology_rounded,
                   title: l10n.vsAi,
-                  subtitle: null, // 占位卡片不显示描述
-                  enabled: false, // M2 接入 AI 后启用
-                  trailingChip: l10n.vsAiComingSoon,
+                  subtitle: l10n.chooseDifficulty,
+                  onTap: () => _pickDifficultyAndStart(context, ref),
                 ),
                 const SizedBox(height: 32),
 
@@ -112,23 +167,16 @@ class HomeScreen extends ConsumerWidget {
 }
 
 /// 首页模式入口卡片。
-///
-/// [enabled] 为 false 时整卡降透明度并忽略点击——
-/// 用于展示「人机对战」这类尚未开放的模块。
 class _ModeCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String? subtitle;
-  final bool enabled;
-  final String? trailingChip;
   final VoidCallback? onTap;
 
   const _ModeCard({
     required this.icon,
     required this.title,
     this.subtitle,
-    this.enabled = true,
-    this.trailingChip,
     this.onTap,
   });
 
@@ -140,38 +188,29 @@ class _ModeCard extends StatelessWidget {
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias, // 让水波纹不溢出圆角
       child: InkWell(
-        onTap: enabled ? onTap : null,
-        child: Opacity(
-          opacity: enabled ? 1 : .55,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                Icon(icon, size: 28, color: theme.colorScheme.primary),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(title, style: theme.textTheme.titleLarge),
-                      if (subtitle != null)
-                        Text(subtitle!,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            )),
-                    ],
-                  ),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Icon(icon, size: 28, color: theme.colorScheme.primary),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: theme.textTheme.titleLarge),
+                    if (subtitle != null)
+                      Text(subtitle!,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          )),
+                  ],
                 ),
-                if (trailingChip != null)
-                  Chip(
-                    label: Text(trailingChip!),
-                    visualDensity: VisualDensity.compact,
-                  )
-                else
-                  Icon(Icons.chevron_right_rounded,
-                      color: theme.colorScheme.onSurfaceVariant),
-              ],
-            ),
+              ),
+              Icon(Icons.chevron_right_rounded,
+                  color: theme.colorScheme.onSurfaceVariant),
+            ],
           ),
         ),
       ),

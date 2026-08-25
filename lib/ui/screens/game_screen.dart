@@ -10,58 +10,51 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:five/core/board.dart';
+import 'package:five/engine/ai_service.dart';
 import 'package:five/l10n/generated/app_localizations.dart';
 import 'package:five/state/game_controller.dart';
 import 'package:five/state/game_state.dart';
 import 'package:five/ui/board_view.dart';
 
-/// 清盘开新局；若当前对局已有进展，先弹窗确认防止误触。
+/// 对局页。
 ///
-/// 窄屏与宽屏面板共用这一份逻辑，保证行为一致。
-Future<void> _restartWithConfirm(
-  BuildContext context,
-  WidgetRef ref,
-  GameState game,
-  AppLocalizations l10n,
-) async {
-  final needsConfirm =
-      game.status == GameStatus.playing && game.moves.isNotEmpty;
-  // 注意括号：Dart 中 || 的优先级高于 ??，
-  // 不加括号会被解析成 (!needsConfirm || dialog) ?? false 而报错。
-  final confirmed =
-      !needsConfirm || (await showDialog<bool>(
-            context: context,
-            builder: (dialogContext) => AlertDialog(
-              title: Text(l10n.restartConfirmTitle),
-              content: Text(l10n.restartConfirmBody),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext, false),
-                  child: Text(l10n.cancel),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.pop(dialogContext, true),
-                  child: Text(l10n.confirm),
-                ),
-              ],
-            ),
-          ) ??
-          false);
+/// 进入即按 [mode] / [aiLevel] 开新局——首页两个入口无需各自记得
+/// 重置控制器，对局初始化内聚在本页的生命周期里。
+class GameScreen extends ConsumerStatefulWidget {
+  final GameMode mode;
 
-  if (confirmed && context.mounted) {
-    ref.read(gameControllerProvider.notifier).restart();
-  }
-}
+  /// AI 难度；仅人机模式使用。
+  final AiLevel? aiLevel;
 
-class GameScreen extends ConsumerWidget {
-  const GameScreen({super.key});
+  const GameScreen({super.key, this.mode = GameMode.localTwoPlayer})
+      : aiLevel = null;
+
+  /// 人机对战入口。
+  const GameScreen.vsAi(this.aiLevel, {super.key}) : mode = GameMode.vsAi;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<GameScreen> createState() => _GameScreenState();
+}
+
+class _GameScreenState extends ConsumerState<GameScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // 首帧渲染完成后再开新局：避免在构建期间修改 provider 状态，
+    // 也保证「从进行中的棋局返回首页再进来」一定得到干净的新局。
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(gameControllerProvider.notifier).startNewGame(
+            mode: widget.mode,
+            aiLevel: widget.aiLevel,
+          );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final game = ref.watch(gameControllerProvider);
-    final controller =
-        ref.read(gameControllerProvider.notifier);
+    final controller = ref.read(gameControllerProvider.notifier);
 
     // 监听终局：状态一变就弹出结算框。
     // ref.listen 写在 build 里，但回调在状态变化时才触发，
@@ -73,7 +66,6 @@ class GameScreen extends ConsumerWidget {
       if (justEnded) _showResultDialog(context, ref, next, l10n);
     });
 
-    // 宽度断点决定布局骨架。
     return Scaffold(
       appBar: AppBar(title: Text(l10n.appTitle)),
       body: LayoutBuilder(builder: (context, constraints) {
@@ -87,9 +79,10 @@ class GameScreen extends ConsumerWidget {
                 board: game.board,
                 lastMove: game.lastMove,
                 winLine: game.winInfo?.line,
-                onCellTap: game.status == GameStatus.playing
-                    ? (cell) => controller.placeAt(cell.x, cell.y)
-                    : null, // 终局后棋盘进入只读
+                onCellTap:
+                    game.status == GameStatus.playing && !game.aiThinking
+                        ? (cell) => controller.placeAt(cell.x, cell.y)
+                        : null, // 终局或 AI 思考中：棋盘只读
               ),
             ),
           ),
@@ -124,6 +117,7 @@ class GameScreen extends ConsumerWidget {
     );
   }
 
+  /// 终局结算弹窗：展示胜负 + 「再来一局」或返回主页。
   void _showResultDialog(
     BuildContext context,
     WidgetRef ref,
@@ -169,7 +163,45 @@ class GameScreen extends ConsumerWidget {
   }
 }
 
-/// 回合指示条（窄屏顶部）：当前行棋方 + 手数。
+/// 清盘开新局；若当前对局已有进展，先弹窗确认防止误触。
+///
+/// 窄屏与宽屏面板共用这一份逻辑，保证行为一致。
+Future<void> _restartWithConfirm(
+  BuildContext context,
+  WidgetRef ref,
+  GameState game,
+  AppLocalizations l10n,
+) async {
+  final needsConfirm =
+      game.status == GameStatus.playing && game.moves.isNotEmpty;
+  // 注意括号：Dart 中 || 的优先级高于 ??，
+  // 不加括号会被解析成 (!needsConfirm || dialog) ?? false 而报错。
+  final confirmed =
+      !needsConfirm || (await showDialog<bool>(
+            context: context,
+            builder: (dialogContext) => AlertDialog(
+              title: Text(l10n.restartConfirmTitle),
+              content: Text(l10n.restartConfirmBody),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext, false),
+                  child: Text(l10n.cancel),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.pop(dialogContext, true),
+                  child: Text(l10n.confirm),
+                ),
+              ],
+            ),
+          ) ??
+          false);
+
+  if (confirmed && context.mounted) {
+    ref.read(gameControllerProvider.notifier).restart();
+  }
+}
+
+/// 回合指示条（窄屏顶部）：当前行棋方 + 手数 + AI 思考指示。
 class _TurnBanner extends StatelessWidget {
   final GameState game;
 
@@ -180,15 +212,17 @@ class _TurnBanner extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isBlack = game.currentStone == Cell.black;
-    // 终局后横幅改为展示结果文案。
-    final text = switch (game.status) {
-      GameStatus.playing =>
-        isBlack ? l10n.blackToMove : l10n.whiteToMove,
-      GameStatus.won => game.winInfo!.winner == Cell.black
-          ? l10n.blackWins
-          : l10n.whiteWins,
-      GameStatus.draw => l10n.drawGame,
-    };
+    // AI 思考中优先展示思考文案；终局后横幅改为展示结果文案。
+    final text = game.aiThinking
+        ? l10n.aiThinking
+        : switch (game.status) {
+            GameStatus.playing =>
+              isBlack ? l10n.blackToMove : l10n.whiteToMove,
+            GameStatus.won => game.winInfo!.winner == Cell.black
+                ? l10n.blackWins
+                : l10n.whiteWins,
+            GameStatus.draw => l10n.drawGame,
+          };
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -202,7 +236,8 @@ class _TurnBanner extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: isBlack ? Colors.black : Colors.white,
-              border: Border.all(color: theme.colorScheme.outline, width: 1.2),
+              border:
+                  Border.all(color: theme.colorScheme.outline, width: 1.2),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: .2),
@@ -214,6 +249,14 @@ class _TurnBanner extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Text(text, style: theme.textTheme.titleMedium),
+          if (game.aiThinking) ...[
+            const SizedBox(width: 8),
+            const SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ],
           const SizedBox(width: 10),
           Text(
             l10n.moveCount(game.moves.length),
@@ -235,6 +278,8 @@ class _BottomActions extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    // AI 思考中禁用悔棋（此时局面正在等待 AI 结果）。
+    final canUndo = game.moves.isNotEmpty && !game.aiThinking;
 
     return SafeArea(
       minimum: const EdgeInsets.all(16),
@@ -242,9 +287,9 @@ class _BottomActions extends ConsumerWidget {
         children: [
           Expanded(
             child: OutlinedButton.icon(
-              // 没有任何手数时无从悔起。
-              onPressed:
-                  game.moves.isEmpty ? null : () => ref.read(gameControllerProvider.notifier).undo(),
+              onPressed: canUndo
+                  ? () => ref.read(gameControllerProvider.notifier).undo()
+                  : null,
               icon: const Icon(Icons.undo_rounded),
               label: Text(l10n.undo),
             ),
@@ -273,6 +318,7 @@ class _SidePanel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final canUndo = game.moves.isNotEmpty && !game.aiThinking;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -283,15 +329,17 @@ class _SidePanel extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              switch (game.status) {
-                GameStatus.playing => game.currentStone == Cell.black
-                    ? l10n.blackToMove
-                    : l10n.whiteToMove,
-                GameStatus.won => game.winInfo!.winner == Cell.black
-                    ? l10n.blackWins
-                    : l10n.whiteWins,
-                GameStatus.draw => l10n.drawGame,
-              },
+              game.aiThinking
+                  ? l10n.aiThinking
+                  : switch (game.status) {
+                      GameStatus.playing => game.currentStone == Cell.black
+                          ? l10n.blackToMove
+                          : l10n.whiteToMove,
+                      GameStatus.won => game.winInfo!.winner == Cell.black
+                          ? l10n.blackWins
+                          : l10n.whiteWins,
+                      GameStatus.draw => l10n.drawGame,
+                    },
               style: theme.textTheme.titleLarge,
               textAlign: TextAlign.center,
             ),
@@ -304,9 +352,9 @@ class _SidePanel extends ConsumerWidget {
             ),
             const SizedBox(height: 20),
             OutlinedButton.icon(
-              onPressed: game.moves.isEmpty
-                  ? null
-                  : () => ref.read(gameControllerProvider.notifier).undo(),
+              onPressed: canUndo
+                  ? () => ref.read(gameControllerProvider.notifier).undo()
+                  : null,
               icon: const Icon(Icons.undo_rounded),
               label: Text(l10n.undo),
             ),

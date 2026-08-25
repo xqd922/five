@@ -25,7 +25,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get vsAi => '人机对战';
 
   @override
-  String get vsAiComingSoon => '敬请期待';
+  String get chooseDifficulty => '选择 AI 难度';
+
+  @override
+  String get aiEasy => '入门';
+
+  @override
+  String get aiMedium => '进阶';
+
+  @override
+  String get aiHard => '大师';
+
+  @override
+  String get aiThinking => 'AI 思考中…';
+
+  @override
+  String get youPlayFirst => '你执黑先行';
 
   @override
   String get settingsTitle => '设置';

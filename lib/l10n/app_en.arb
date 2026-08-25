@@ -13,9 +13,20 @@
   "@localTwoPlayerDesc": {},
 
   "vsAi": "Play vs AI",
-  "@vsAi": { "description": "AI opponent mode entry (coming in M2)" },
-  "vsAiComingSoon": "Coming soon",
-  "@vsAiComingSoon": {},
+  "@vsAi": { "description": "AI opponent mode entry" },
+
+  "chooseDifficulty": "Choose AI difficulty",
+  "@chooseDifficulty": {},
+
+  "aiEasy": "Easy",
+  "aiMedium": "Medium",
+  "aiHard": "Hard",
+
+  "aiThinking": "AI is thinking…",
+  "@aiThinking": {},
+
+  "youPlayFirst": "You play black and move first",
+  "@youPlayFirst": {},
 
   "settingsTitle": "Settings",
   "@settingsTitle": {},

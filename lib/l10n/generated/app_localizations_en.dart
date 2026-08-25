@@ -25,7 +25,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vsAi => 'Play vs AI';
 
   @override
-  String get vsAiComingSoon => 'Coming soon';
+  String get chooseDifficulty => 'Choose AI difficulty';
+
+  @override
+  String get aiEasy => 'Easy';
+
+  @override
+  String get aiMedium => 'Medium';
+
+  @override
+  String get aiHard => 'Hard';
+
+  @override
+  String get aiThinking => 'AI is thinking…';
+
+  @override
+  String get youPlayFirst => 'You play black and move first';
 
   @override
   String get settingsTitle => 'Settings';
