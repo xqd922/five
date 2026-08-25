@@ -10,6 +10,7 @@ import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:five/core/board.dart';
@@ -79,7 +80,25 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       if (justEnded) _showResultDialog(context, ref, next, l10n);
     });
 
-    return Scaffold(
+    // 桌面端键盘快捷键。Windows/Linux 用 Ctrl，macOS 自动匹配 Cmd——
+    // 同一动作注册两种修饰键，各平台只会命中自己那组。
+    // 移动端没有物理键盘，CallbackShortcuts 静默无副作用。
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyZ, control: true):
+            controller.undo,
+        const SingleActivator(LogicalKeyboardKey.keyZ, meta: true):
+            controller.undo,
+        const SingleActivator(LogicalKeyboardKey.keyR, control: true):
+            () => _restartWithConfirm(context, ref, game, l10n),
+        const SingleActivator(LogicalKeyboardKey.keyR, meta: true):
+            () => _restartWithConfirm(context, ref, game, l10n),
+        const SingleActivator(LogicalKeyboardKey.keyH, control: true):
+            controller.requestHint,
+        const SingleActivator(LogicalKeyboardKey.keyH, meta: true):
+            controller.requestHint,
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: Text(l10n.appTitle),
         actions: [
@@ -177,6 +196,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           ],
         );
       }),
+      ),
     );
   }
 

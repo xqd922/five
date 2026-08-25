@@ -6,10 +6,13 @@
 /// 3. 挂载根组件 [FiveApp]。
 library;
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'package:five/l10n/generated/app_localizations.dart';
 import 'package:five/state/theme_provider.dart';
@@ -22,6 +25,23 @@ const Color _seedColor = Color(0xFF00696E);
 Future<void> main() async {
   // 在使用任何插件/异步初始化前必须先确保引擎就绪。
   WidgetsFlutterBinding.ensureInitialized();
+
+  // —— 桌面端专属：窗口尺寸与初始位置 ——
+  // 移动端没有"窗口"概念，直接跳过；这也是全平台代码的典型形态：
+  // 平台差异被压缩到启动处的一个 if 里，业务代码保持完全共享。
+  if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+    await windowManager.ensureInitialized();
+    const windowOptions = WindowOptions(
+      size: Size(1024, 800), // 桌面默认：宽屏布局的舒适尺寸
+      minimumSize: Size(420, 560), // 再小就挤压棋盘可读性了
+      center: true,
+      title: 'Five',
+    );
+    await windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+      await windowManager.focus();
+    });
+  }
 
   final prefs = await SharedPreferences.getInstance();
 
