@@ -24,6 +24,12 @@ jobs:
 
       - run: flutter pub get
       - run: flutter gen-l10n
+
+      # server/ 是独立 Dart 包且会被根目录 analyze 扫到，
+      # 必须先解析其依赖，分析器才能理解 package:five_server 导入。
+      - run: dart pub get
+        working-directory: server
+
       - run: flutter analyze
       - run: flutter test
 
