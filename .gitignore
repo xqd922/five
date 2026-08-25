@@ -44,5 +44,8 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Gradle 在 android/ 子目录也会生成自己的 build 输出
+/android/build/
+
 # Widget Preview related
 .widget_preview/
