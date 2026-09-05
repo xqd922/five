@@ -56,6 +56,22 @@
   "statsLosses": "L",
   "statsDraws": "D",
 
+  "boardStyleTitle": "Board Style",
+  "boardStyleWood": "Kaya Wood",
+  "boardStyleZen": "Ink Slate",
+  "boardStyleJade": "Celadon Jade",
+  "winRate": "Win Rate",
+  "totalGames": "Total Games",
+  "playerHuman": "Player",
+  "playerAi": "AI",
+  "quickPlay": "Quick Play",
+
+  "navPlay": "Play",
+  "navOnline": "Online",
+  "navStats": "Stats",
+  "navSettings": "Settings",
+  "aboutApp": "About Five",
+
   "themeModeTitle": "Theme",
   "@themeModeTitle": { "description": "Section label for light/dark theme selection" },
   "themeSystem": "System",

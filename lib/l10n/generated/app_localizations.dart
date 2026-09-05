@@ -308,6 +308,90 @@ abstract class AppLocalizations {
   /// **'D'**
   String get statsDraws;
 
+  /// No description provided for @boardStyleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Board Style'**
+  String get boardStyleTitle;
+
+  /// No description provided for @boardStyleWood.
+  ///
+  /// In en, this message translates to:
+  /// **'Kaya Wood'**
+  String get boardStyleWood;
+
+  /// No description provided for @boardStyleZen.
+  ///
+  /// In en, this message translates to:
+  /// **'Ink Slate'**
+  String get boardStyleZen;
+
+  /// No description provided for @boardStyleJade.
+  ///
+  /// In en, this message translates to:
+  /// **'Celadon Jade'**
+  String get boardStyleJade;
+
+  /// No description provided for @winRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Win Rate'**
+  String get winRate;
+
+  /// No description provided for @totalGames.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Games'**
+  String get totalGames;
+
+  /// No description provided for @playerHuman.
+  ///
+  /// In en, this message translates to:
+  /// **'Player'**
+  String get playerHuman;
+
+  /// No description provided for @playerAi.
+  ///
+  /// In en, this message translates to:
+  /// **'AI'**
+  String get playerAi;
+
+  /// No description provided for @quickPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Play'**
+  String get quickPlay;
+
+  /// No description provided for @navPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get navPlay;
+
+  /// No description provided for @navOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get navOnline;
+
+  /// No description provided for @navStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Stats'**
+  String get navStats;
+
+  /// No description provided for @navSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get navSettings;
+
+  /// No description provided for @aboutApp.
+  ///
+  /// In en, this message translates to:
+  /// **'About Five'**
+  String get aboutApp;
+
   /// Section label for light/dark theme selection
   ///
   /// In en, this message translates to:

@@ -11,6 +11,35 @@ import 'package:five/state/theme_provider.dart'; // 复用 sharedPreferencesProv
 
 const String _moveNumbersKey = 'five.show_move_numbers';
 
+/// 棋盘风格：经典榧木 / 水墨玄石 / 苍青碧玉。
+enum BoardStyle {
+  wood, // 经典榧木 (暖金榧木纹理与棋盘)
+  zen,  // 水墨玄石 (静谧雅致的玄武岩 / 墨玉盘)
+  jade, // 苍青碧玉 (现代青瓷翡翠风，呼应主色)
+}
+
+const String _boardStyleKey = 'five.board_style';
+
+final boardStyleProvider =
+    NotifierProvider<BoardStyleController, BoardStyle>(BoardStyleController.new);
+
+class BoardStyleController extends Notifier<BoardStyle> {
+  @override
+  BoardStyle build() {
+    final saved = ref.watch(sharedPreferencesProvider).getString(_boardStyleKey);
+    return switch (saved) {
+      'zen' => BoardStyle.zen,
+      'jade' => BoardStyle.jade,
+      _ => BoardStyle.wood,
+    };
+  }
+
+  Future<void> set(BoardStyle style) async {
+    state = style;
+    await ref.read(sharedPreferencesProvider).setString(_boardStyleKey, style.name);
+  }
+}
+
 /// 是否在棋子上显示落子顺序数字（复盘利器，默认关闭保持棋面干净）。
 final showMoveNumbersProvider =
     NotifierProvider<ShowMoveNumbersController, bool>(

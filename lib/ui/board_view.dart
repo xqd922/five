@@ -9,11 +9,13 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:five_core/five_core.dart';
+import 'package:five/state/settings_provider.dart';
 import 'package:five/ui/board_painter.dart';
 
-class BoardView extends StatefulWidget {
+class BoardView extends ConsumerStatefulWidget {
   /// 要绘制的盘面。
   final Board board;
 
@@ -32,6 +34,9 @@ class BoardView extends StatefulWidget {
   /// AI 提示标记位置。
   final Point? hint;
 
+  /// 指定棋盘风格；若为 null 则自动跟随全局偏好 [boardStyleProvider]。
+  final BoardStyle? boardStyle;
+
   /// 玩家点击了某个交叉点；无效点击不会触发。
   ///
   /// 对局结束后上层应传 null 来冻结输入，而不是在这里判断状态。
@@ -45,14 +50,15 @@ class BoardView extends StatefulWidget {
     this.moves = const [],
     this.showMoveNumbers = false,
     this.hint,
+    this.boardStyle,
     this.onCellTap,
   });
 
   @override
-  State<BoardView> createState() => _BoardViewState();
+  ConsumerState<BoardView> createState() => _BoardViewState();
 }
 
-class _BoardViewState extends State<BoardView>
+class _BoardViewState extends ConsumerState<BoardView>
     with SingleTickerProviderStateMixin {
   late final AnimationController _dropController = AnimationController(
     vsync: this,
@@ -84,8 +90,8 @@ class _BoardViewState extends State<BoardView>
 
   @override
   Widget build(BuildContext context) {
-    // Material 3 配色推导出的棋盘调色板，随主题明暗自动切换。
-    final palette = BoardPalette.fromTheme(Theme.of(context));
+    final activeStyle = widget.boardStyle ?? ref.watch(boardStyleProvider);
+    final palette = BoardPalette.fromTheme(Theme.of(context), style: activeStyle);
     final interactive = widget.onCellTap != null;
 
     return AspectRatio(
@@ -110,8 +116,7 @@ class _BoardViewState extends State<BoardView>
                 ? GestureDetector(
                     behavior: HitTestBehavior.opaque, // 空白区域也响应
                     onTapUp: (details) {
-                      // 与绘制共用同一套几何换算——
-                      // 「画在哪」和「点在哪」天然对齐。
+                      // 与绘制共用同一套几何换算——「画在哪」和「点在哪」天然对齐。
                       final geo = BoardGeometry.forSide(
                         context.size?.shortestSide ?? 0,
                       );

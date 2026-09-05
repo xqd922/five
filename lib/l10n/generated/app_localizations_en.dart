@@ -115,6 +115,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsDraws => 'D';
 
   @override
+  String get boardStyleTitle => 'Board Style';
+
+  @override
+  String get boardStyleWood => 'Kaya Wood';
+
+  @override
+  String get boardStyleZen => 'Ink Slate';
+
+  @override
+  String get boardStyleJade => 'Celadon Jade';
+
+  @override
+  String get winRate => 'Win Rate';
+
+  @override
+  String get totalGames => 'Total Games';
+
+  @override
+  String get playerHuman => 'Player';
+
+  @override
+  String get playerAi => 'AI';
+
+  @override
+  String get quickPlay => 'Quick Play';
+
+  @override
+  String get navPlay => 'Play';
+
+  @override
+  String get navOnline => 'Online';
+
+  @override
+  String get navStats => 'Stats';
+
+  @override
+  String get navSettings => 'Settings';
+
+  @override
+  String get aboutApp => 'About Five';
+
+  @override
   String get themeModeTitle => 'Theme';
 
   @override

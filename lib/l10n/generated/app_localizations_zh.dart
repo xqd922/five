@@ -115,6 +115,48 @@ class AppLocalizationsZh extends AppLocalizations {
   String get statsDraws => '和';
 
   @override
+  String get boardStyleTitle => '棋盘风格';
+
+  @override
+  String get boardStyleWood => '经典榧木';
+
+  @override
+  String get boardStyleZen => '水墨玄石';
+
+  @override
+  String get boardStyleJade => '苍青碧玉';
+
+  @override
+  String get winRate => '胜率';
+
+  @override
+  String get totalGames => '总场次';
+
+  @override
+  String get playerHuman => '玩家';
+
+  @override
+  String get playerAi => 'AI';
+
+  @override
+  String get quickPlay => '快速对局';
+
+  @override
+  String get navPlay => '对弈';
+
+  @override
+  String get navOnline => '联机';
+
+  @override
+  String get navStats => '战绩';
+
+  @override
+  String get navSettings => '设置';
+
+  @override
+  String get aboutApp => '关于软件';
+
+  @override
   String get themeModeTitle => '主题';
 
   @override

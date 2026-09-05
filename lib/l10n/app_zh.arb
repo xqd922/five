@@ -47,6 +47,22 @@
   "statsLosses": "负",
   "statsDraws": "和",
 
+  "boardStyleTitle": "棋盘风格",
+  "boardStyleWood": "经典榧木",
+  "boardStyleZen": "水墨玄石",
+  "boardStyleJade": "苍青碧玉",
+  "winRate": "胜率",
+  "totalGames": "总场次",
+  "playerHuman": "玩家",
+  "playerAi": "AI",
+  "quickPlay": "快速对局",
+
+  "navPlay": "对弈",
+  "navOnline": "联机",
+  "navStats": "战绩",
+  "navSettings": "设置",
+  "aboutApp": "关于软件",
+
   "themeModeTitle": "主题",
   "themeSystem": "跟随系统",
   "themeLight": "浅色",
