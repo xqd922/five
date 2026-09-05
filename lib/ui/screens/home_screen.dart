@@ -1,4 +1,4 @@
-/// 应用主界面：底部导航栏（对弈 / 联机 / 战绩 / 设置）与全平台自适应框架。
+/// 应用主界面：参考 FlClash 风格的精美分组卡片、大圆角几何、底部导航栏与桌面自适应框架。
 library;
 
 import 'package:flutter/material.dart';
@@ -31,7 +31,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
-    // 联机对手就位时自动跳进在线对局
     ref.listen(onlineControllerProvider, (prev, next) {
       if (next.phase == OnlinePhase.inRoom &&
           prev?.phase != OnlinePhase.inRoom) {
@@ -79,7 +78,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         );
 
         if (isWide) {
-          // 桌面 / 平板宽屏：左侧 NavigationRail
+          // 桌面/宽屏：左侧 NavigationRail
           return Scaffold(
             body: Row(
               children: [
@@ -87,6 +86,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   selectedIndex: _currentIndex,
                   onDestinationSelected: (i) => setState(() => _currentIndex = i),
                   labelType: NavigationRailLabelType.all,
+                  backgroundColor: theme.colorScheme.surface,
+                  indicatorColor: theme.colorScheme.primaryContainer,
                   leading: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     child: Container(
@@ -123,24 +124,183 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           );
         }
 
-        // 手机竖屏：标准原生底部导航栏
+        // 移动端：标准精致 BottomNavigationBar
         return Scaffold(
           body: SafeArea(
             bottom: false,
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 560),
+                constraints: const BoxConstraints(maxWidth: 540),
                 child: currentTab,
               ),
             ),
           ),
           bottomNavigationBar: NavigationBar(
+            elevation: 0,
             selectedIndex: _currentIndex,
             onDestinationSelected: (i) => setState(() => _currentIndex = i),
+            indicatorColor: theme.colorScheme.primaryContainer,
             destinations: destinations,
           ),
         );
       },
+    );
+  }
+}
+
+// =============================================================================
+// FlClash 风格基础组件：SettingsBlock 分组卡片与 SettingTile 列表项
+// =============================================================================
+
+/// 参考 FlClash 的 SettingsBlock：带微型小图标标题分组与大圆角统一容器。
+class SettingsBlock extends StatelessWidget {
+  final String title;
+  final IconData? icon;
+  final List<Widget> children;
+  final Widget? trailing;
+
+  const SettingsBlock({
+    super.key,
+    required this.title,
+    this.icon,
+    this.trailing,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 6, bottom: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    if (icon != null) ...[
+                      Icon(icon, size: 16, color: theme.colorScheme.primary),
+                      const SizedBox(width: 8),
+                    ],
+                    Text(
+                      title,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ],
+                ),
+                trailing ?? const SizedBox.shrink(),
+              ],
+            ),
+          ),
+          Card(
+            margin: EdgeInsets.zero,
+            elevation: 0,
+            color: theme.colorScheme.surfaceContainerLow,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+              side: BorderSide(
+                color: theme.colorScheme.outlineVariant.withValues(alpha: .35),
+                width: 1.0,
+              ),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                for (var i = 0; i < children.length; i++) ...[
+                  if (i > 0)
+                    Divider(
+                      height: 1,
+                      thickness: 1,
+                      indent: 58,
+                      color: theme.colorScheme.outlineVariant.withValues(alpha: .2),
+                    ),
+                  children[i],
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// FlClash 风格的 SettingTile 列表行组件。
+class SettingTile extends StatelessWidget {
+  final IconData icon;
+  final Color? iconColor;
+  final String title;
+  final String? subtitle;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+
+  const SettingTile({
+    super.key,
+    required this.icon,
+    this.iconColor,
+    required this.title,
+    this.subtitle,
+    this.trailing,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = iconColor ?? theme.colorScheme.primary;
+
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: .12),
+                borderRadius: BorderRadius.circular(11),
+              ),
+              child: Icon(icon, size: 20, color: color),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle!,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            ?trailing,
+          ],
+        ),
+      ),
     );
   }
 }
@@ -171,6 +331,7 @@ class _PlayTab extends ConsumerWidget {
       builder: (dialogContext) {
         final theme = Theme.of(dialogContext);
         return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           title: Row(
             children: [
               Icon(Icons.psychology_rounded, color: theme.colorScheme.primary),
@@ -186,17 +347,22 @@ class _PlayTab extends ConsumerWidget {
                   padding: const EdgeInsets.only(bottom: 8),
                   child: ListTile(
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(16),
                       side: BorderSide(
                         color: theme.colorScheme.outlineVariant.withValues(alpha: .5),
                       ),
                     ),
-                    leading: CircleAvatar(
-                      backgroundColor: switch (level) {
-                        AiLevel.easy => Colors.green.withValues(alpha: .15),
-                        AiLevel.medium => Colors.orange.withValues(alpha: .15),
-                        AiLevel.hard => Colors.red.withValues(alpha: .15),
-                      },
+                    leading: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: switch (level) {
+                          AiLevel.easy => Colors.green.withValues(alpha: .15),
+                          AiLevel.medium => Colors.orange.withValues(alpha: .15),
+                          AiLevel.hard => Colors.red.withValues(alpha: .15),
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       child: Icon(
                         switch (level) {
                           AiLevel.easy => Icons.sentiment_satisfied_rounded,
@@ -208,6 +374,7 @@ class _PlayTab extends ConsumerWidget {
                           AiLevel.medium => Colors.orange,
                           AiLevel.hard => Colors.red,
                         },
+                        size: 20,
                       ),
                     ),
                     title: Text(
@@ -230,7 +397,7 @@ class _PlayTab extends ConsumerWidget {
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                    trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
                     onTap: () => Navigator.pop(dialogContext, level),
                   ),
                 ),
@@ -250,27 +417,30 @@ class _PlayTab extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       children: [
         _HeroHeader(l10n: l10n),
-        const SizedBox(height: 24),
+        const SizedBox(height: 20),
 
-        // 人机对弈
+        // 人机对弈尊贵卡片
         _VsAiCard(
           onPick: () => _pickDifficultyAndStart(context, ref),
           onStartLevel: (lvl) => _startVsAi(context, ref, lvl),
         ),
         const SizedBox(height: 14),
 
-        // 本地双人
-        Card.outlined(
+        // 双人对弈
+        Card(
           margin: EdgeInsets.zero,
+          elevation: 0,
+          color: theme.colorScheme.surfaceContainerLow,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(20),
             side: BorderSide(
-              color: theme.colorScheme.outlineVariant.withValues(alpha: .5),
+              color: theme.colorScheme.outlineVariant.withValues(alpha: .35),
             ),
           ),
+          clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: () {
               ref.read(gameControllerProvider.notifier).startNewGame(
@@ -280,20 +450,19 @@ class _PlayTab extends ConsumerWidget {
                 MaterialPageRoute<void>(builder: (_) => const GameScreen()),
               );
             },
-            borderRadius: BorderRadius.circular(22),
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(18),
               child: Row(
                 children: [
                   Container(
-                    width: 48,
-                    height: 48,
+                    width: 44,
+                    height: 44,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE65100).withValues(alpha: .15),
-                      borderRadius: BorderRadius.circular(15),
+                      color: const Color(0xFFE65100).withValues(alpha: .14),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Icon(Icons.people_alt_rounded,
-                        color: Color(0xFFE65100), size: 28),
+                        color: Color(0xFFE65100), size: 24),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -302,7 +471,7 @@ class _PlayTab extends ConsumerWidget {
                       children: [
                         Text(
                           l10n.localTwoPlayer,
-                          style: theme.textTheme.titleLarge?.copyWith(
+                          style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -323,48 +492,24 @@ class _PlayTab extends ConsumerWidget {
             ),
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 18),
 
         // 规则说明小卡片
-        Card(
-          margin: EdgeInsets.zero,
-          elevation: 0,
-          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: .35),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.info_outline_rounded,
-                    size: 20, color: theme.colorScheme.primary),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '无禁手五子棋规则',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '黑先白后，交替落子。在横向、纵向或对角线任意方向最先连成五颗及以上同色棋子者获胜。无禁手限制，轻松对弈。',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+        SettingsBlock(
+          title: '游戏规则与特色',
+          icon: Icons.auto_awesome_outlined,
+          children: [
+            SettingTile(
+              icon: Icons.verified_outlined,
+              title: '无禁手规则',
+              subtitle: '黑白交替落子，先连成五颗及以上者获胜。',
             ),
-          ),
+            SettingTile(
+              icon: Icons.memory_rounded,
+              title: 'Isolate 后台 AI 引擎',
+              subtitle: '多线程无阻塞搜索，深度计算零掉帧。',
+            ),
+          ],
         ),
       ],
     );
@@ -383,21 +528,10 @@ class _OnlineTab extends ConsumerStatefulWidget {
 
 class _OnlineTabState extends ConsumerState<_OnlineTab> {
   final _roomCodeCtrl = TextEditingController();
-  final _serverCtrl = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _serverCtrl.text = ref.read(serverUrlProvider);
-    });
-  }
 
   @override
   void dispose() {
     _roomCodeCtrl.dispose();
-    _serverCtrl.dispose();
     super.dispose();
   }
 
@@ -408,222 +542,127 @@ class _OnlineTabState extends ConsumerState<_OnlineTab> {
     final online = ref.watch(onlineControllerProvider);
 
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       children: [
-        Row(
-          children: [
-            Icon(Icons.wifi_tethering_rounded,
-                color: theme.colorScheme.primary, size: 28),
-            const SizedBox(width: 12),
-            Text(
-              '在线联机对战',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w800,
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '在线对战大厅',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Text(
-          '跨端实时对战 · 房号即进 · 自动判定',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+              const SizedBox(height: 4),
+              Text(
+                '创建专属房间或输入房号极速连线',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 24),
 
         if (online.phase == OnlinePhase.waiting) ...[
           _WaitingRoomCard(state: online),
         ] else ...[
-          // 创建房间
-          Card(
-            margin: EdgeInsets.zero,
-            elevation: 1,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(22),
-              side: BorderSide(
-                color: theme.colorScheme.primary.withValues(alpha: .3),
-                width: 1.2,
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Icon(
-                          Icons.add_circle_outline_rounded,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.createRoom,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          Text(
-                            '生成专属 4 位房号，随时等待好友加入',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: online.phase == OnlinePhase.connecting
-                          ? null
-                          : () => ref
-                              .read(onlineControllerProvider.notifier)
-                              .createRoom(),
-                      icon: online.phase == OnlinePhase.connecting
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
-                            )
-                          : const Icon(Icons.flash_on_rounded),
-                      label: Text(online.phase == OnlinePhase.connecting
-                          ? '正在创建…'
-                          : l10n.createRoom),
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // 加入房间
-          Card.outlined(
-            margin: EdgeInsets.zero,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(22),
-              side: BorderSide(
-                color: theme.colorScheme.outlineVariant.withValues(alpha: .5),
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Icon(
-                          Icons.login_rounded,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.joinRoom,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          Text(
-                            '输入好友分享的 4 位房间码',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  TextField(
-                    controller: _roomCodeCtrl,
-                    keyboardType: TextInputType.number,
-                    maxLength: 4,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    decoration: InputDecoration(
-                      labelText: l10n.roomCodeLabel,
-                      counterText: '',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      filled: true,
-                      fillColor: theme.colorScheme.surfaceContainerHighest
-                          .withValues(alpha: .25),
-                    ),
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      letterSpacing: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () => ref
+          SettingsBlock(
+            title: '房间管理',
+            icon: Icons.meeting_room_outlined,
+            children: [
+              SettingTile(
+                icon: Icons.add_box_rounded,
+                iconColor: theme.colorScheme.primary,
+                title: l10n.createRoom,
+                subtitle: '生成 4 位房号，邀请好友同屏对决',
+                trailing: FilledButton(
+                  onPressed: online.phase == OnlinePhase.connecting
+                      ? null
+                      : () => ref
                           .read(onlineControllerProvider.notifier)
-                          .joinRoom(_roomCodeCtrl.text),
-                      icon: const Icon(Icons.arrow_forward_rounded),
-                      label: Text(l10n.joinRoom),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
+                          .createRoom(),
+                  style: FilledButton.styleFrom(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(online.phase == OnlinePhase.connecting
+                      ? '创建中…'
+                      : '创建'),
+                ),
+              ),
+            ],
+          ),
+
+          SettingsBlock(
+            title: '加入对局',
+            icon: Icons.login_rounded,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _roomCodeCtrl,
+                      keyboardType: TextInputType.number,
+                      maxLength: 4,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      decoration: InputDecoration(
+                        labelText: l10n.roomCodeLabel,
+                        hintText: '输入 4 位房间码',
+                        counterText: '',
+                        border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
+                        ),
+                        filled: true,
+                        fillColor: theme.colorScheme.surface,
+                      ),
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        letterSpacing: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => ref
+                            .read(onlineControllerProvider.notifier)
+                            .joinRoom(_roomCodeCtrl.text),
+                        icon: const Icon(Icons.login_rounded),
+                        label: Text(l10n.joinRoom),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
 
           if (online.errorMessage != null) ...[
-            const SizedBox(height: 14),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: theme.colorScheme.errorContainer.withValues(alpha: .5),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Row(
                 children: [
                   Icon(Icons.error_outline_rounded,
                       color: theme.colorScheme.error, size: 20),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       online.errorMessage!,
@@ -650,11 +689,14 @@ class _WaitingRoomCard extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
-    return Card.outlined(
+    return Card(
+      margin: EdgeInsets.zero,
+      elevation: 0,
+      color: theme.colorScheme.surfaceContainerLow,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(22),
         side: BorderSide(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: .5),
+          color: theme.colorScheme.outlineVariant.withValues(alpha: .35),
         ),
       ),
       child: Padding(
@@ -688,6 +730,11 @@ class _WaitingRoomCard extends ConsumerWidget {
               },
               icon: const Icon(Icons.copy_rounded, size: 18),
               label: Text(l10n.copyRoomCode),
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
             const SizedBox(height: 28),
             const CircularProgressIndicator(),
@@ -726,87 +773,92 @@ class _StatsTab extends ConsumerWidget {
     final winRate = total > 0 ? (stats.wins * 100 / total).round() : 0;
 
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '战绩与成就',
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '人机对战数据本地统计',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-            if (total > 0)
-              IconButton.outlined(
-                tooltip: '重置战绩',
-                icon: const Icon(Icons.delete_sweep_rounded, size: 20),
-                onPressed: () async {
-                  final confirmed = await showDialog<bool>(
-                    context: context,
-                    builder: (dCtx) => AlertDialog(
-                      title: const Text('重置所有战绩？'),
-                      content: const Text('所有本地保存的人机胜负平记录将被清空且不可恢复。'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(dCtx, false),
-                          child: Text(l10n.cancel),
-                        ),
-                        FilledButton(
-                          onPressed: () => Navigator.pop(dCtx, true),
-                          child: Text(l10n.confirm),
-                        ),
-                      ],
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '战绩与成就',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
                     ),
-                  );
-                  if (confirmed == true) {
-                    ref.read(statsProvider.notifier).reset();
-                  }
-                },
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '人机竞技战绩数据看板',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
-          ],
+              if (total > 0)
+                IconButton.outlined(
+                  tooltip: '清空战绩',
+                  icon: const Icon(Icons.delete_sweep_rounded, size: 20),
+                  onPressed: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (dCtx) => AlertDialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(22),
+                        ),
+                        title: const Text('重置所有战绩？'),
+                        content: const Text('所有本地保存的人机胜负平记录将被清空且不可恢复。'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(dCtx, false),
+                            child: Text(l10n.cancel),
+                          ),
+                          FilledButton(
+                            onPressed: () => Navigator.pop(dCtx, true),
+                            child: Text(l10n.confirm),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirmed == true) {
+                      ref.read(statsProvider.notifier).reset();
+                    }
+                  },
+                ),
+            ],
+          ),
         ),
-        const SizedBox(height: 24),
 
-        // 核心战绩卡
+        // 胜率与大数卡
         Card(
-          margin: EdgeInsets.zero,
-          elevation: 2,
+          margin: const EdgeInsets.only(bottom: 20),
+          elevation: 0,
+          color: theme.colorScheme.surfaceContainerLow,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(20),
             side: BorderSide(
-              color: theme.colorScheme.primary.withValues(alpha: .3),
-              width: 1.2,
+              color: theme.colorScheme.outlineVariant.withValues(alpha: .35),
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(22),
             child: Column(
               children: [
-                // 胜率大圆盘
                 Stack(
                   alignment: Alignment.center,
                   children: [
                     SizedBox(
-                      width: 120,
-                      height: 120,
+                      width: 110,
+                      height: 110,
                       child: CircularProgressIndicator(
                         value: total > 0 ? (stats.wins / total) : 0,
-                        strokeWidth: 10,
+                        strokeWidth: 9,
                         strokeCap: StrokeCap.round,
-                        backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                        backgroundColor:
+                            theme.colorScheme.surfaceContainerHighest,
                         color: theme.colorScheme.primary,
                       ),
                     ),
@@ -821,7 +873,7 @@ class _StatsTab extends ConsumerWidget {
                           ),
                         ),
                         Text(
-                          '人机胜率',
+                          '胜率',
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -830,11 +882,12 @@ class _StatsTab extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
-                const Divider(height: 1),
                 const SizedBox(height: 20),
-
-                // 三项统计
+                Divider(
+                  height: 1,
+                  color: theme.colorScheme.outlineVariant.withValues(alpha: .25),
+                ),
+                const SizedBox(height: 18),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -862,60 +915,32 @@ class _StatsTab extends ConsumerWidget {
             ),
           ),
         ),
-        const SizedBox(height: 20),
 
-        // 战绩成就荣誉卡
-        Card.outlined(
-          margin: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(
-              color: theme.colorScheme.outlineVariant.withValues(alpha: .5),
+        // 成就徽章列表
+        SettingsBlock(
+          title: '成就勋章',
+          icon: Icons.military_tech_outlined,
+          children: [
+            SettingTile(
+              icon: Icons.star_rounded,
+              iconColor: stats.wins >= 1 ? Colors.amber : Colors.grey,
+              title: '初露锋芒',
+              subtitle: '在人机对战中取得第 1 场胜利',
+              trailing: stats.wins >= 1
+                  ? const Icon(Icons.check_circle_rounded, color: Colors.green)
+                  : const Text('未达成', style: TextStyle(color: Colors.grey)),
             ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('成就徽章',
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 12),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: CircleAvatar(
-                    backgroundColor: stats.wins >= 1
-                        ? Colors.amber.withValues(alpha: .2)
-                        : theme.colorScheme.surfaceContainerHighest,
-                    child: Icon(Icons.star_rounded,
-                        color: stats.wins >= 1 ? Colors.amber : Colors.grey),
-                  ),
-                  title: const Text('初露锋芒'),
-                  subtitle: const Text('在人机对战中取得首场胜利'),
-                  trailing: stats.wins >= 1
-                      ? const Icon(Icons.check_circle_rounded, color: Colors.green)
-                      : const Text('未达成', style: TextStyle(color: Colors.grey)),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: CircleAvatar(
-                    backgroundColor: stats.wins >= 5
-                        ? Colors.blue.withValues(alpha: .2)
-                        : theme.colorScheme.surfaceContainerHighest,
-                    child: Icon(Icons.shield_rounded,
-                        color: stats.wins >= 5 ? Colors.blue : Colors.grey),
-                  ),
-                  title: const Text('棋道名手'),
-                  subtitle: const Text('在人机对战中累计胜满 5 局'),
-                  trailing: stats.wins >= 5
-                      ? const Icon(Icons.check_circle_rounded, color: Colors.green)
-                      : Text('${stats.wins}/5', style: const TextStyle(color: Colors.grey)),
-                ),
-              ],
+            SettingTile(
+              icon: Icons.shield_rounded,
+              iconColor: stats.wins >= 5 ? Colors.blue : Colors.grey,
+              title: '棋道名手',
+              subtitle: '在人机对战中累计胜满 5 局',
+              trailing: stats.wins >= 5
+                  ? const Icon(Icons.check_circle_rounded, color: Colors.green)
+                  : Text('${stats.wins}/5',
+                      style: const TextStyle(color: Colors.grey)),
             ),
-          ),
+          ],
         ),
       ],
     );
@@ -947,7 +972,7 @@ class _BigStatTile extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               '$value',
-              style: theme.textTheme.headlineSmall?.copyWith(
+              style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
                 color: color,
               ),
@@ -967,7 +992,7 @@ class _BigStatTile extends StatelessWidget {
 }
 
 // =============================================================================
-// TAB 3: 设置与个性化 (SettingsTab)
+// TAB 3: 设置与个性化 (SettingsTab) —— 深度参考 FlClash 的分组设置风格
 // =============================================================================
 class _SettingsTab extends ConsumerWidget {
   const _SettingsTab();
@@ -982,200 +1007,240 @@ class _SettingsTab extends ConsumerWidget {
     final serverUrl = ref.watch(serverUrlProvider);
 
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       children: [
-        Text(
-          l10n.settingsTitle,
-          style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '棋盘材质、视觉主题与对弈选项',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 24),
-
-        // 棋盘风格
-        Card.outlined(
-          margin: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
-            side: BorderSide(
-              color: theme.colorScheme.outlineVariant.withValues(alpha: .5),
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.grid_4x4_rounded,
-                        size: 20, color: theme.colorScheme.primary),
-                    const SizedBox(width: 8),
-                    Text(l10n.boardStyleTitle,
-                        style: theme.textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w700)),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                BoardStyleSelector(activeStyle: boardStyle),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 14),
-
-        // 主题设置
-        Card.outlined(
-          margin: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
-            side: BorderSide(
-              color: theme.colorScheme.outlineVariant.withValues(alpha: .5),
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.palette_outlined,
-                        size: 20, color: theme.colorScheme.primary),
-                    const SizedBox(width: 8),
-                    Text(l10n.themeModeTitle,
-                        style: theme.textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w700)),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                SizedBox(
-                  width: double.infinity,
-                  child: SegmentedButton<ThemeMode>(
-                    segments: [
-                      ButtonSegment(
-                        value: ThemeMode.system,
-                        icon: const Icon(Icons.brightness_auto_rounded, size: 18),
-                        label: Text(l10n.themeSystem),
-                      ),
-                      ButtonSegment(
-                        value: ThemeMode.light,
-                        icon: const Icon(Icons.light_mode_rounded, size: 18),
-                        label: Text(l10n.themeLight),
-                      ),
-                      ButtonSegment(
-                        value: ThemeMode.dark,
-                        icon: const Icon(Icons.dark_mode_rounded, size: 18),
-                        label: Text(l10n.themeDark),
-                      ),
-                    ],
-                    selected: {themeMode},
-                    onSelectionChanged: (selection) => ref
-                        .read(themeModeProvider.notifier)
-                        .set(selection.first),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 14),
-
-        // 对局辅助与联机设置
-        Card.outlined(
-          margin: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
-            side: BorderSide(
-              color: theme.colorScheme.outlineVariant.withValues(alpha: .5),
-            ),
-          ),
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 16),
           child: Column(
-            children: [
-              SwitchListTile(
-                title: Text(l10n.showMoveNumbers),
-                subtitle: const Text('对局棋面上清晰标注落子先后手数'),
-                value: showNumbers,
-                onChanged: (val) =>
-                    ref.read(showMoveNumbersProvider.notifier).set(val),
-              ),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.dns_outlined),
-                title: Text(l10n.serverAddress),
-                subtitle: Text(serverUrl),
-                trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: () async {
-                  final ctrl = TextEditingController(text: serverUrl);
-                  final newUrl = await showDialog<String>(
-                    context: context,
-                    builder: (dCtx) => AlertDialog(
-                      title: Text(l10n.serverAddress),
-                      content: TextField(
-                        controller: ctrl,
-                        decoration: const InputDecoration(
-                          hintText: 'ws://host:8080',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(dCtx),
-                          child: Text(l10n.cancel),
-                        ),
-                        FilledButton(
-                          onPressed: () => Navigator.pop(dCtx, ctrl.text),
-                          child: Text(l10n.confirm),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (newUrl != null && newUrl.trim().isNotEmpty) {
-                    ref.read(serverUrlProvider.notifier).set(newUrl.trim());
-                  }
-                },
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 20),
-
-        // 关于软件
-        Center(
-          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Five · 五子棋 v1.1.0',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurfaceVariant,
+                l10n.settingsTitle,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
-                '全平台 Material 3 竞技五子棋 · 开源品质',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: .7),
+                '棋盘材质、外观偏好与对战设置',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
+
+        // 分组 1：外观与主题
+        SettingsBlock(
+          title: '外观与棋盘',
+          icon: Icons.palette_outlined,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withValues(alpha: .12),
+                          borderRadius: BorderRadius.circular(11),
+                        ),
+                        child: Icon(Icons.grid_4x4_rounded,
+                            size: 20, color: theme.colorScheme.primary),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.boardStyleTitle,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            '选择棋盘材质外观与触感氛围',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  BoardStyleSelector(activeStyle: boardStyle),
+                ],
+              ),
+            ),
+            SettingTile(
+              icon: Icons.brightness_auto_rounded,
+              title: l10n.themeModeTitle,
+              subtitle: switch (themeMode) {
+                ThemeMode.system => l10n.themeSystem,
+                ThemeMode.light => l10n.themeLight,
+                ThemeMode.dark => l10n.themeDark,
+              },
+              trailing: SizedBox(
+                height: 38,
+                child: SegmentedButton<ThemeMode>(
+                  style: SegmentedButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  segments: [
+                    ButtonSegment(
+                      value: ThemeMode.system,
+                      label: Text(l10n.themeSystem),
+                    ),
+                    ButtonSegment(
+                      value: ThemeMode.light,
+                      label: Text(l10n.themeLight),
+                    ),
+                    ButtonSegment(
+                      value: ThemeMode.dark,
+                      label: Text(l10n.themeDark),
+                    ),
+                  ],
+                  selected: {themeMode},
+                  onSelectionChanged: (selection) => ref
+                      .read(themeModeProvider.notifier)
+                      .set(selection.first),
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        // 分组 2：对局与辅助设置
+        SettingsBlock(
+          title: '对局与辅助',
+          icon: Icons.tune_rounded,
+          children: [
+            SettingTile(
+              icon: Icons.pin_rounded,
+              title: l10n.showMoveNumbers,
+              subtitle: '在棋子表面清晰标注先后手数字',
+              trailing: Switch(
+                value: showNumbers,
+                onChanged: (val) =>
+                    ref.read(showMoveNumbersProvider.notifier).set(val),
+              ),
+            ),
+            SettingTile(
+              icon: Icons.lightbulb_outline_rounded,
+              title: 'AI 深度提示',
+              subtitle: '支持对局中一键请求最佳着法推演',
+              trailing: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '三档算力',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onPrimaryContainer,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        // 分组 3：网络与联机配置
+        SettingsBlock(
+          title: '网络与服务器',
+          icon: Icons.cloud_outlined,
+          children: [
+            SettingTile(
+              icon: Icons.dns_outlined,
+              title: l10n.serverAddress,
+              subtitle: serverUrl,
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () async {
+                final ctrl = TextEditingController(text: serverUrl);
+                final newUrl = await showDialog<String>(
+                  context: context,
+                  builder: (dCtx) => AlertDialog(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                    title: Text(l10n.serverAddress),
+                    content: TextField(
+                      controller: ctrl,
+                      decoration: InputDecoration(
+                        hintText: 'ws://host:8080',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(dCtx),
+                        child: Text(l10n.cancel),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(dCtx, ctrl.text),
+                        child: Text(l10n.confirm),
+                      ),
+                    ],
+                  ),
+                );
+                if (newUrl != null && newUrl.trim().isNotEmpty) {
+                  ref.read(serverUrlProvider.notifier).set(newUrl.trim());
+                }
+              },
+            ),
+          ],
+        ),
+
+        // 分组 4：关于软件
+        SettingsBlock(
+          title: '关于',
+          icon: Icons.info_outline_rounded,
+          children: [
+            SettingTile(
+              icon: Icons.verified_outlined,
+              title: '应用版本',
+              subtitle: '全平台无禁手五子棋客户端',
+              trailing: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'v1.1.0 (Stable)',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SettingTile(
+              icon: Icons.code_rounded,
+              title: '开源许可',
+              subtitle: 'MIT License · 自由使用与分享',
+            ),
+          ],
+        ),
       ],
     );
   }
 }
 
 // =============================================================================
-// 辅助子组件
+// 辅助展示卡片与材质选择器
 // =============================================================================
 
 class _HeroHeader extends StatelessWidget {
@@ -1191,10 +1256,10 @@ class _HeroHeader extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 58,
-          height: 58,
+          width: 54,
+          height: 54,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(16),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -1218,17 +1283,17 @@ class _HeroHeader extends StatelessWidget {
             alignment: Alignment.center,
             children: [
               CustomPaint(
-                size: const Size(40, 40),
+                size: const Size(36, 36),
                 painter: _EmblemGridPainter(
                   color: isDark ? const Color(0x66D5B08A) : const Color(0x7356330E),
                 ),
               ),
-              const PositiondStone(isBlack: true, offset: Offset(-8, -6)),
-              const PositiondStone(isBlack: false, offset: Offset(8, 6)),
+              const PositiondStone(isBlack: true, offset: Offset(-7, -5)),
+              const PositiondStone(isBlack: false, offset: Offset(7, 5)),
             ],
           ),
         ),
-        const SizedBox(width: 18),
+        const SizedBox(width: 16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1237,7 +1302,7 @@ class _HeroHeader extends StatelessWidget {
                 children: [
                   Text(
                     'Five',
-                    style: theme.textTheme.headlineMedium?.copyWith(
+                    style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.5,
                       color: theme.colorScheme.onSurface,
@@ -1262,8 +1327,8 @@ class _HeroHeader extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                '落子无悔 · 方寸智弈 · 竞技级五子棋',
-                style: theme.textTheme.bodyMedium?.copyWith(
+                '落子无悔 · 方寸智弈 · 竞技五子棋',
+                style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
@@ -1286,8 +1351,8 @@ class PositiondStone extends StatelessWidget {
     return Transform.translate(
       offset: offset,
       child: Container(
-        width: 22,
-        height: 22,
+        width: 20,
+        height: 20,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: RadialGradient(
@@ -1345,21 +1410,21 @@ class _VsAiCard extends StatelessWidget {
 
     return Card(
       margin: EdgeInsets.zero,
-      elevation: 2,
+      elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(20),
         side: BorderSide(
           color: theme.colorScheme.primary.withValues(alpha: isDark ? .4 : .25),
-          width: 1.4,
+          width: 1.2,
         ),
       ),
       child: InkWell(
         onTap: onPick,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(20),
         child: Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(20),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -1380,11 +1445,11 @@ class _VsAiCard extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    width: 48,
-                    height: 48,
+                    width: 44,
+                    height: 44,
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primary,
-                      borderRadius: BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(14),
                       boxShadow: [
                         BoxShadow(
                           color: theme.colorScheme.primary.withValues(alpha: .35),
@@ -1394,9 +1459,9 @@ class _VsAiCard extends StatelessWidget {
                       ],
                     ),
                     child: const Icon(Icons.psychology_rounded,
-                        color: Colors.white, size: 28),
+                        color: Colors.white, size: 26),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1405,7 +1470,7 @@ class _VsAiCard extends StatelessWidget {
                           children: [
                             Text(
                               l10n.vsAi,
-                              style: theme.textTheme.titleLarge?.copyWith(
+                              style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -1418,7 +1483,7 @@ class _VsAiCard extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
-                                'AI 对弈',
+                                '竞技级',
                                 style: theme.textTheme.labelSmall?.copyWith(
                                   color: theme.colorScheme.primary,
                                   fontWeight: FontWeight.bold,
@@ -1441,7 +1506,7 @@ class _VsAiCard extends StatelessWidget {
                       color: theme.colorScheme.onSurfaceVariant),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               Row(
                 children: [
                   _DifficultyPill(
@@ -1524,7 +1589,7 @@ class _DifficultyPill extends StatelessWidget {
   }
 }
 
-/// 棋盘风格选择器（带有材质色球预览）。
+/// 棋盘材质风格卡片选择器（遵循 FlClash 的 CommonCard 视觉规范）。
 class BoardStyleSelector extends ConsumerWidget {
   final BoardStyle activeStyle;
 
@@ -1554,13 +1619,13 @@ class BoardStyleSelector extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: activeStyle == style
                       ? theme.colorScheme.primaryContainer
-                      : theme.colorScheme.surfaceContainerHighest.withValues(alpha: .35),
+                      : theme.colorScheme.surface,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: activeStyle == style
                         ? theme.colorScheme.primary
-                        : Colors.transparent,
-                    width: 1.5,
+                        : theme.colorScheme.outlineVariant.withValues(alpha: .5),
+                    width: activeStyle == style ? 1.5 : 1.0,
                   ),
                 ),
                 child: Row(
