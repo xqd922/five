@@ -17,6 +17,7 @@ import 'package:window_manager/window_manager.dart';
 import 'package:five/l10n/generated/app_localizations.dart';
 import 'package:five/state/theme_provider.dart';
 import 'package:five/ui/screens/home_screen.dart';
+import 'package:five/ui/theme/m3_theme.dart';
 
 /// Material 3 的主题种子色：深青瓷色。
 /// 明暗两套 ColorScheme 全部由它自动派生，换主题色只改这一处。
@@ -76,19 +77,9 @@ class FiveApp extends ConsumerWidget {
       ],
       supportedLocales: AppLocalizations.supportedLocales, // en + zh
 
-      // —— Material 3 双主题 ——
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: _seedColor,
-          brightness: Brightness.light,
-        ),
-      ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: _seedColor,
-          brightness: Brightness.dark,
-        ),
-      ),
+      // —— Material 3 双主题（M3 规范令牌） ——
+      theme: buildM3LightTheme(_seedColor),
+      darkTheme: buildM3DarkTheme(_seedColor),
       themeMode: themeMode,
 
       home: const HomeScreen(),

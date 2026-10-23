@@ -21,6 +21,7 @@ import 'package:five/state/game_state.dart';
 import 'package:five/state/online_controller.dart';
 import 'package:five/state/settings_provider.dart';
 import 'package:five/ui/board_view.dart';
+import 'package:five/ui/effects/effects.dart';
 import 'package:five/ui/screens/game_screen_online.dart';
 
 /// 对局页。
@@ -126,7 +127,14 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             () => _restartWithConfirm(context, ref, game, l10n),
       },
       child: Scaffold(
+      // M3: 用 surfaceContainerLowest 做背景，让棋盘表面自然浮起。
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
       appBar: AppBar(
+        // M3: 返回按钮用 surface 容器色，降低视觉权重。
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: Text(l10n.appTitle),
         actions: [
           if (!isOnline)
@@ -134,9 +142,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               tooltip: l10n.hint,
               icon: game.hintLoading
                   ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      width: 20,
+                      height: 20,
+                      child: PulseRingLoader(size: 20),
                     )
                   : const Icon(Icons.lightbulb_outline_rounded),
               onPressed: canHint ? localController.requestHint : null,
@@ -222,7 +230,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           children: [
             isOnline
                 ? OnlineTurnBanner(online: online!, moveCount: game.moves.length)
-                : _TurnBanner(game: game),
+                : _AnimatedTurnBanner(game: game),
             Expanded(child: boardArea),
             if (!isOnline && game.status != GameStatus.playing)
               _ReplayBar(game: game),
@@ -246,6 +254,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   }
 
   /// 终局结算弹窗：展示胜负 + 「再来一局」或返回主页。
+  /// 胜利时触发纸屑庆祝特效。
   void _showResultDialog(
     BuildContext context,
     WidgetRef ref,
@@ -259,33 +268,44 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       _ => l10n.drawGame,
     };
 
+    final isWin = game.status == GameStatus.won;
+    final winnerColor = isWin
+        ? (game.winInfo!.winner == Cell.black
+            ? Theme.of(context).colorScheme.onSurface
+            : Colors.white)
+        : null;
+
     showDialog<void>(
       context: context,
       barrierDismissible: false, // 必须明确选择去向
-      builder: (dialogContext) => AlertDialog(
-        icon: Icon(
-          game.status == GameStatus.won
-              ? Icons.emoji_events_rounded
-              : Icons.handshake_rounded,
-          size: 40,
+      builder: (dialogContext) => VictoryCelebration(
+        isWin: isWin,
+        winnerColor: winnerColor,
+        child: AlertDialog(
+          icon: Icon(
+            game.status == GameStatus.won
+                ? Icons.emoji_events_rounded
+                : Icons.handshake_rounded,
+            size: 40,
+          ),
+          title: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                Navigator.of(context).pop(); // 返回首页
+              },
+              child: Text(l10n.backHome),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                ref.read(gameControllerProvider.notifier).restart();
+              },
+              child: Text(l10n.restart),
+            ),
+          ],
         ),
-        title: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              Navigator.of(context).pop(); // 返回首页
-            },
-            child: Text(l10n.backHome),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              ref.read(gameControllerProvider.notifier).restart();
-            },
-            child: Text(l10n.restart),
-          ),
-        ],
       ),
     );
   }
@@ -430,16 +450,15 @@ class _ReplayBar extends ConsumerWidget {
   }
 }
 
-/// 回合指示条（窄屏顶部）：当前行棋方 + 手数 + AI 思考指示。
-class _TurnBanner extends StatelessWidget {
+/// 动画回合指示条（窄屏顶部）：棋子翻转切换 + 文案淡入 + AI 呼吸效果。
+class _AnimatedTurnBanner extends StatelessWidget {
   final GameState game;
 
-  const _TurnBanner({required this.game});
+  const _AnimatedTurnBanner({required this.game});
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
     final isBlack = game.currentStone == Cell.black;
     // AI 思考中优先展示思考文案；终局后横幅改为展示结果文案。
     final text = game.aiThinking
@@ -455,44 +474,11 @@ class _TurnBanner extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // 行棋方棋子示意圆点。
-          Container(
-            width: 18,
-            height: 18,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isBlack ? Colors.black : Colors.white,
-              border:
-                  Border.all(color: theme.colorScheme.outline, width: 1.2),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: .2),
-                  blurRadius: 3,
-                  offset: const Offset(0, 1),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          Text(text, style: theme.textTheme.titleMedium),
-          if (game.aiThinking) ...[
-            const SizedBox(width: 8),
-            const SizedBox(
-              width: 14,
-              height: 14,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          ],
-          const SizedBox(width: 10),
-          Text(
-            l10n.moveCount(game.moves.length),
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-          ),
-        ],
+      child: AnimatedTurnIndicator(
+        isBlack: isBlack,
+        text: text,
+        isThinking: game.aiThinking,
+        moveCountText: l10n.moveCount(game.moves.length),
       ),
     );
   }
@@ -557,6 +543,11 @@ class _SidePanel extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (game.aiThinking) ...[
+              const SizedBox(height: 8),
+              const Center(child: PulseRingLoader(size: 40)),
+              const SizedBox(height: 12),
+            ],
             Text(
               game.aiThinking
                   ? l10n.aiThinking

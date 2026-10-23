@@ -76,12 +76,20 @@ class BoardPalette {
   });
 
   /// 从当前主题推导配色。
+  ///
+  /// M3 色彩角色：
+  /// - board: surfaceContainerHighest（浅色）/ surface+black 混合（深色）
+  /// - gridLine: onSurface 的层级透明度
+  /// - lastMark: error 色（醒目标记）
+  /// - winLine: tertiary 色（与主色区分，高辨识度）
   factory BoardPalette.fromTheme(ThemeData theme) {
     final scheme = theme.colorScheme;
     final isDark = scheme.brightness == Brightness.dark;
-    // 深色模式下把棋盘底色调得更深一档，让白色网格线自然浮现。
-    final boardColor =
-        isDark ? Color.lerp(scheme.surfaceContainerLowest, Colors.black, .25)! : scheme.surfaceContainerHigh;
+    // M3: surfaceContainerHighest 用于需要突出的表面（棋盘底板）。
+    // 深色模式下调深一档，让白色网格线自然浮现。
+    final boardColor = isDark
+        ? Color.lerp(scheme.surfaceContainerLowest, Colors.black, .25)!
+        : scheme.surfaceContainerHighest;
 
     return BoardPalette(
       board: boardColor,
@@ -91,8 +99,8 @@ class BoardPalette {
       blackStone: isDark ? const Color(0xFF1A1C1E) : scheme.onSurface,
       whiteStone: Colors.white,
       whiteStoneEdge: isDark ? Colors.white : scheme.outline,
-      lastMark: scheme.error, // 用主题错误色做末手标记，醒目且随主题变化
-      winLine: scheme.primary,
+      lastMark: scheme.error, // M3 error 色：醒目且随主题变化
+      winLine: scheme.tertiary, // M3 tertiary：与 primary 区分，高辨识度
     );
   }
 }

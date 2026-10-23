@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:five/l10n/generated/app_localizations.dart';
 import 'package:five/state/online_controller.dart';
 import 'package:five/state/settings_provider.dart';
+import 'package:five/ui/effects/effects.dart';
 import 'package:five/ui/screens/game_screen.dart';
 
 class OnlineLobbyScreen extends ConsumerStatefulWidget {
@@ -66,12 +67,17 @@ class _OnlineLobbyScreenState extends ConsumerState<OnlineLobbyScreen> {
             constraints: const BoxConstraints(maxWidth: 420),
             child: switch (online.phase) {
               OnlinePhase.connecting =>
-                const Column(
+                Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('…'),
+                    const RippleLoader(size: 48),
+                    const SizedBox(height: 16),
+                    Text(l10n.waitingOpponent,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            )),
                   ],
                 ),
               OnlinePhase.waiting => _WaitingRoomView(state: online),
@@ -105,35 +111,44 @@ class _LobbyForm extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FilledButton.icon(
-          onPressed: () => ref.read(onlineControllerProvider.notifier).createRoom(),
-          icon: const Icon(Icons.add_circle_outline_rounded),
-          label: Text(l10n.createRoom),
+        StaggeredEntry(
+          index: 0,
+          child: FilledButton.icon(
+            onPressed: () => ref.read(onlineControllerProvider.notifier).createRoom(),
+            icon: const Icon(Icons.add_circle_outline_rounded),
+            label: Text(l10n.createRoom),
+          ),
         ),
         const SizedBox(height: 12),
-        OutlinedButton.icon(
-          onPressed: () => ref
-              .read(onlineControllerProvider.notifier)
-              .joinRoom(roomCodeCtrl.text),
-          icon: const Icon(Icons.login_rounded),
-          label: Text(l10n.joinRoom),
+        StaggeredEntry(
+          index: 1,
+          child: OutlinedButton.icon(
+            onPressed: () => ref
+                .read(onlineControllerProvider.notifier)
+                .joinRoom(roomCodeCtrl.text),
+            icon: const Icon(Icons.login_rounded),
+            label: Text(l10n.joinRoom),
+          ),
         ),
         const SizedBox(height: 8),
-        TextField(
-          controller: roomCodeCtrl,
-          keyboardType: TextInputType.number,
-          maxLength: 4,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          decoration: InputDecoration(
-            labelText: l10n.roomCodeLabel,
-            counterText: '',
-            border: const OutlineInputBorder(),
+        StaggeredEntry(
+          index: 2,
+          child: TextField(
+            controller: roomCodeCtrl,
+            keyboardType: TextInputType.number,
+            maxLength: 4,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: InputDecoration(
+              labelText: l10n.roomCodeLabel,
+              counterText: '',
+              border: const OutlineInputBorder(),
+            ),
+            textAlign: TextAlign.center,
+            style: Theme.of(context)
+                .textTheme
+                .headlineMedium
+                ?.copyWith(letterSpacing: 12),
           ),
-          textAlign: TextAlign.center,
-          style: Theme.of(context)
-              .textTheme
-              .headlineMedium
-              ?.copyWith(letterSpacing: 12),
         ),
 
         // 错误提示（连接失败 / 房间不存在等）。
@@ -148,22 +163,30 @@ class _LobbyForm extends ConsumerWidget {
 
         const SizedBox(height: 32),
         // —— 高级设置：服务器地址 ——
-        TextField(
-          controller: serverCtrl,
-          decoration: InputDecoration(
-            labelText: l10n.serverAddress,
-            border: const OutlineInputBorder(),
-            isDense: true,
-          ),
-          onSubmitted: (value) =>
-              ref.read(serverUrlProvider.notifier).set(value),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'ws://host:port',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+        StaggeredEntry(
+          index: 3,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: serverCtrl,
+                decoration: InputDecoration(
+                  labelText: l10n.serverAddress,
+                  border: const OutlineInputBorder(),
+                  isDense: true,
+                ),
+                onSubmitted: (value) =>
+                    ref.read(serverUrlProvider.notifier).set(value),
               ),
+              const SizedBox(height: 6),
+              Text(
+                'ws://host:port',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -184,33 +207,46 @@ class _WaitingRoomView extends ConsumerWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(l10n.roomCodeLabel, style: theme.textTheme.titleMedium),
+        StaggeredEntry(
+          index: 0,
+          child: Text(l10n.roomCodeLabel, style: theme.textTheme.titleMedium),
+        ),
         const SizedBox(height: 12),
         // 房号是这一屏的主角——超大展示，方便口头报给朋友。
-        SelectableText(
-          state.roomId ?? '----',
-          style: theme.textTheme.displayLarge?.copyWith(
-            letterSpacing: 16,
-            fontWeight: FontWeight.w700,
-            color: theme.colorScheme.primary,
+        StaggeredEntry(
+          index: 1,
+          offset: const Offset(0, 15),
+          child: SelectableText(
+            state.roomId ?? '----',
+            style: theme.textTheme.displayLarge?.copyWith(
+              letterSpacing: 16,
+              fontWeight: FontWeight.w700,
+              color: theme.colorScheme.primary,
+            ),
           ),
         ),
         const SizedBox(height: 12),
-        OutlinedButton.icon(
-          onPressed: () async {
-            await Clipboard.setData(
-                ClipboardData(text: state.roomId ?? ''));
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.roomCodeCopied)),
-              );
-            }
-          },
-          icon: const Icon(Icons.copy_rounded),
-          label: Text(l10n.copyRoomCode),
+        StaggeredEntry(
+          index: 2,
+          child: OutlinedButton.icon(
+            onPressed: () async {
+              await Clipboard.setData(
+                  ClipboardData(text: state.roomId ?? ''));
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(l10n.roomCodeCopied)),
+                );
+              }
+            },
+            icon: const Icon(Icons.copy_rounded),
+            label: Text(l10n.copyRoomCode),
+          ),
         ),
         const SizedBox(height: 28),
-        const CircularProgressIndicator(),
+        StaggeredEntry(
+          index: 3,
+          child: const RippleLoader(size: 40),
+        ),
         const SizedBox(height: 16),
         Text(l10n.waitingOpponent,
             style: theme.textTheme.bodyLarge?.copyWith(

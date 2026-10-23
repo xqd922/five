@@ -11,6 +11,7 @@ import 'package:five_core/five_core.dart';
 import 'package:five/l10n/generated/app_localizations.dart';
 import 'package:five/state/game_state.dart';
 import 'package:five/state/online_controller.dart';
+import 'package:five/ui/effects/effects.dart';
 
 /// 联机回合横幅：你的颜色 + 对手状态 + 手数。
 class OnlineTurnBanner extends StatelessWidget {
@@ -26,7 +27,6 @@ class OnlineTurnBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
     final iAmBlack = online.myColor == SeatColor.black;
 
     // 文案优先级：终局 > 对手掉线 > 行棋提示。
@@ -47,38 +47,12 @@ class OnlineTurnBanner extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 18,
-            height: 18,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: iAmBlack ? Colors.black : Colors.white,
-              border:
-                  Border.all(color: theme.colorScheme.outline, width: 1.2),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Flexible(child: Text(text, style: theme.textTheme.titleMedium)),
-          if (!online.opponentOnline &&
-              online.game.status == GameStatus.playing) ...[
-            const SizedBox(width: 8),
-            const SizedBox(
-              width: 14,
-              height: 14,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          ],
-          const SizedBox(width: 10),
-          Text(
-            l10n.moveCount(moveCount),
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
+      child: AnimatedTurnIndicator(
+        isBlack: iAmBlack,
+        text: text,
+        isThinking: !online.opponentOnline &&
+            online.game.status == GameStatus.playing,
+        moveCountText: l10n.moveCount(moveCount),
       ),
     );
   }
